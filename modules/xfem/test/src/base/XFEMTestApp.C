@@ -66,6 +66,7 @@ XFEMTestApp::registerExecFlags(Factory & /*factory*/)
 {
   registerUserObject(ExtraQPTest);
   registerDiracKernel(ManagedSourceTest);
+  registerMaterial(StatefulTestMaterial);
 }
 
 extern "C" void
