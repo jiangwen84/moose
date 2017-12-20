@@ -1665,6 +1665,9 @@ FEProblemBase::reinitElemPhys(const Elem * elem,
   if (_has_nonlocal_coupling)
     _assembly[tid]->prepareNonlocal();
 
+  // WJ
+  return;
+
   if (_displaced_problem && _reinit_displaced_elem && !suppress_displaced_init)
   {
     _displaced_problem->reinitElemPhys(
@@ -1809,6 +1812,9 @@ FEProblemBase::reinitNeighborPhys(const Elem * neighbor,
   // Compute the values of each variable at the points
   _nl->reinitNeighborFace(neighbor, neighbor_side, 0, tid);
   _aux->reinitNeighborFace(neighbor, neighbor_side, 0, tid);
+
+  // WJ
+  return;
 
   // Do the same for the displaced problem
   if (_displaced_problem && _reinit_displaced_face)
