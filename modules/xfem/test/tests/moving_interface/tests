@@ -5,8 +5,7 @@
     exodiff = 'moving_level_set_out.e moving_level_set_out.e-s002 moving_level_set_out.e-s003'
     map = false
     unique_id = true
-    requirement = 'The XFEM module shall provide an ability to specify whether an XFEM cut surface '
-                  'should be healed independently for individual interfaces'
+    requirement = 'The XFEM module shall provide an ability to specify whether an XFEM cut surface should be healed independently for individual interfaces'
     design = 'LineSegmentCutSetUserObject.md LevelSetCutUserObject.md'
     issues = '#11259'
   []
@@ -17,8 +16,7 @@
     cli_args = 'XFEM/debug_output_level=0'
     unique_id = true
     absent_out = 'XFEM mesh cutting with element fragment algorithm complete'
-    requirement = 'The XFEM module shall not output summary information on mesh changes when '
-                  'debug_output_level=0'
+    requirement = 'The XFEM module shall not output summary information on mesh changes when debug_output_level=0'
     design = 'XFEM/index.md'
     issues = '#13666'
   []
@@ -29,8 +27,7 @@
     cli_args = 'XFEM/debug_output_level=1'
     unique_id = true
     expect_out = 'XFEM mesh cutting with element fragment algorithm complete'
-    requirement = 'The XFEM module shall output summary information on mesh changes when '
-                  'debug_output_level=1'
+    requirement = 'The XFEM module shall output summary information on mesh changes when debug_output_level=1'
     design = 'XFEM/index.md'
     issues = '#13666'
   []
@@ -41,8 +38,7 @@
     cli_args = 'XFEM/debug_output_level=2'
     unique_id = true
     expect_out = 'XFEM added new node:'
-    requirement = 'The XFEM module shall output detailed information on mesh changes when '
-                  'debug_output_level=2'
+    requirement = 'The XFEM module shall output detailed information on mesh changes when debug_output_level=2'
     design = 'XFEM/index.md'
     issues = '#13666'
   []
@@ -53,8 +49,7 @@
     cli_args = 'XFEM/debug_output_level=3'
     unique_id = true
     expect_out = 'XFEM Element fragment algorithm mesh prior to cutting:'
-    requirement = 'The XFEM module shall output detailed information on mesh changes when '
-                  'debug_output_level=3'
+    requirement = 'The XFEM module shall output detailed information on mesh changes when debug_output_level=3'
     design = 'XFEM/index.md'
     issues = '#13666'
   []
@@ -64,11 +59,8 @@
     exodiff = 'moving_bimaterial_out.e moving_bimaterial_out.e-s002'
     map = false
     unique_id = true
-    requirement = 'The XFEM module shall provide an ability to solve bi-material mechanics problems '
-                  'where a moving material interface is defined by an XFEM surface, which is defined '
-                  'by a prescribed level set field.'
-    design = 'LevelSetBiMaterialRankTwo.md LevelSetBiMaterialRankFour.md '
-             'XFEMSingleVariableConstraint.md'
+    requirement = 'The XFEM module shall provide an ability to solve bi-material mechanics problems where a moving material interface is defined by an XFEM surface, which is defined by a prescribed level set field.'
+    design = 'LevelSetBiMaterialRankTwo.md LevelSetBiMaterialRankFour.md XFEMSingleVariableConstraint.md'
     issues = '#11259 #15096'
   []
   [moving_ad_bimaterials]
@@ -78,40 +70,27 @@
     map = false
     unique_id = true
     prereq = moving_bimaterials
-    requirement = 'The XFEM module shall provide an ability to solve bi-material mechanics problems '
-                  'where a moving material interface is defined by an XFEM surface, which is defined '
-                  'by a prescribed level set field, while using the automatic differentiation '
-                  'capability.'
+    requirement = 'The XFEM module shall provide an ability to solve bi-material mechanics problems where a moving material interface is defined by an XFEM surface, which is defined by a prescribed level set field, while using the automatic differentiation capability.'
     design = 'LevelSetBiMaterialRankTwo.md LevelSetBiMaterialRankFour.md'
     issues = '#15437'
   []
   [moving_bimaterial_finite_strain]
     type = Exodiff
     input = moving_bimaterial_finite_strain.i
-    exodiff = 'moving_bimaterial_finite_strain_out.e moving_bimaterial_finite_strain_out.e-s002 '
-              'moving_bimaterial_finite_strain_out.e-s003 moving_bimaterial_finite_strain_out.e-s004 '
-              'moving_bimaterial_finite_strain_out.e-s005'
+    exodiff = 'moving_bimaterial_finite_strain_out.e moving_bimaterial_finite_strain_out.e-s002 moving_bimaterial_finite_strain_out.e-s003 moving_bimaterial_finite_strain_out.e-s004 moving_bimaterial_finite_strain_out.e-s005'
     map = false
     unique_id = true
-    requirement = 'The XFEM module shall provide an ability to solve bi-material mechanics problems '
-                  'at finite strain where a moving material interface is defined by an XFEM surface, '
-                  'which is defined by a prescribed level set field.'
-    design = 'LevelSetBiMaterialRankTwo.md LevelSetBiMaterialRankFour.md '
-             'XFEMSingleVariableConstraint.md'
+    requirement = 'The XFEM module shall provide an ability to solve bi-material mechanics problems at finite strain where a moving material interface is defined by an XFEM surface, which is defined by a prescribed level set field.'
+    design = 'LevelSetBiMaterialRankTwo.md LevelSetBiMaterialRankFour.md XFEMSingleVariableConstraint.md'
     issues = '#15817'
   []
   [moving_bimaterial_finite_strain_esm]
     type = Exodiff
     input = moving_bimaterial_finite_strain_esm.i
-    exodiff = 'moving_bimaterial_finite_strain_esm_out.e '
-              'moving_bimaterial_finite_strain_esm_out.e-s002 '
-              'moving_bimaterial_finite_strain_esm_out.e-s003 '
-              'moving_bimaterial_finite_strain_esm_out.e-s004 '
-              'moving_bimaterial_finite_strain_esm_out.e-s005'
+    exodiff = 'moving_bimaterial_finite_strain_esm_out.e moving_bimaterial_finite_strain_esm_out.e-s002 moving_bimaterial_finite_strain_esm_out.e-s003 moving_bimaterial_finite_strain_esm_out.e-s004 moving_bimaterial_finite_strain_esm_out.e-s005'
     map = false
     unique_id = true
-    requirement = 'The XFEM module shall provide an ability to modify subdomain IDs based on an XFEM '
-                  'interface.'
+    requirement = 'The XFEM module shall provide an ability to modify subdomain IDs based on an XFEM interface.'
     design = 'CutElementSubdomainModifier.md'
     issues = '#15817'
   []
@@ -121,9 +100,7 @@
     exodiff = 'moving_diffusion_out.e moving_diffusion_out.e-s002'
     map = false
     unique_id = true
-    requirement = 'The XFEM module shall provide an ability to solve bi-material diffusion problems '
-                  'where a moving material interface is defined by an XFEM surface, which is defined '
-                  'by a prescribed level set field.'
+    requirement = 'The XFEM module shall provide an ability to solve bi-material diffusion problems where a moving material interface is defined by an XFEM surface, which is defined by a prescribed level set field.'
     design = 'LevelSetBiMaterialReal.md XFEMEqualValueAtInterface.md LevelSetCutUserObject.md'
     issues = '#11749'
   []
@@ -134,59 +111,52 @@
     map = false
     unique_id = true
     prereq = moving_diffusion
-    requirement = 'The XFEM module shall provide an ability to solve bi-material diffusion problems '
-                  'where a moving material interface is defined by an XFEM surface, which is defined '
-                  'by a prescribed level set field, while using automatic differentiation.'
+    requirement = 'The XFEM module shall provide an ability to solve bi-material diffusion problems where a moving material interface is defined by an XFEM surface, which is defined by a prescribed level set field, while using automatic differentiation.'
     design = 'LevelSetBiMaterialReal.md'
     issues = '#15437'
   []
   [phase_transition_2d]
     type = Exodiff
     input = phase_transition_2d.i
-    exodiff = 'phase_transition_2d_out.e  phase_transition_2d_out.e-s002  phase_transition_2d_out.e-s003  '
-              'phase_transition_2d_out.e-s004'
+    exodiff = 'phase_transition_2d_out.e  phase_transition_2d_out.e-s002  phase_transition_2d_out.e-s003  phase_transition_2d_out.e-s004'
     map = false
     unique_id = true
     abs_zero = 1e-8
-    requirement = 'The XFEM module shall provide an ability to solve a simple 2d phase transition '
-                  'problem in which the phase boundary is defined by and XFEM surface and the '
-                  'interface velocity depends on the jump of variables and gradients across the '
-                  'interface.'
-    design = 'LevelSetBiMaterialReal.md XFEMEqualValueAtInterface.md MeshCutLevelSetAux.md '
-             'XFEMPhaseTransitionMovingInterfaceVelocity.md NodeValueAtXFEMInterface.md '
-             'InterfaceMeshCut2DUserObject.md'
+    requirement = 'The XFEM module shall provide an ability to solve a simple 2d phase transition problem in which the phase boundary is defined by and XFEM surface and the interface velocity depends on the jump of variables and gradients across the interface.'
+    design = 'LevelSetBiMaterialReal.md XFEMEqualValueAtInterface.md MeshCutLevelSetAux.md XFEMPhaseTransitionMovingInterfaceVelocity.md NodeValueAtXFEMInterface.md InterfaceMeshCut2DUserObject.md'
     issues = '#11749 #17797'
   []
   [phase_transition_3d]
     type = Exodiff
-    input = phase_transition_3d.i
-    exodiff = 'phase_transition_3d_out.e  phase_transition_3d_out.e-s002  phase_transition_3d_out.e-s003  '
-              'phase_transition_3d_out.e-s004'
+    input = ad_phase_transition.i
+  []
+  [moving_diffusion]
+    type = Exodiff
+    input = moving_diffusion.i
+    exodiff = 'moving_diffusion_out.e moving_diffusion_out.e-s002'
+    map = false
+    unique_id = true
+  []
+  [phase_transition]
+    type = Exodiff
+    input = phase_transition.i
+    exodiff = 'phase_transition_out.e  phase_transition_out.e-s002  phase_transition_out.e-s003  phase_transition_out.e-s004'
     map = false
     unique_id = true
     abs_zero = 1e-8
-    requirement = 'The XFEM module shall provide an ability to solve a simple 3d phase transition '
-                  'problem in which the phase boundary is defined by and XFEM surface and the '
-                  'interface velocity depends on the jump of variables and gradients across the '
-                  'interface.'
-    design = 'LevelSetBiMaterialReal.md XFEMEqualValueAtInterface.md MeshCutLevelSetAux.md '
-             'XFEMPhaseTransitionMovingInterfaceVelocity.md NodeValueAtXFEMInterface.md '
-             'InterfaceMeshCut3DUserObject.md'
+    requirement = 'The XFEM module shall provide an ability to solve a simple 3d phase transition problem in which the phase boundary is defined by and XFEM surface and the interface velocity depends on the jump of variables and gradients across the interface.'
+    design = 'LevelSetBiMaterialReal.md XFEMEqualValueAtInterface.md MeshCutLevelSetAux.md XFEMPhaseTransitionMovingInterfaceVelocity.md NodeValueAtXFEMInterface.md InterfaceMeshCut3DUserObject.md'
     issues = '#11749 #17797'
   []
   [ad_phase_transition_2d]
     type = Exodiff
     input = ad_phase_transition_2d.i
-    exodiff = 'phase_transition_2d_out.e  phase_transition_2d_out.e-s002  phase_transition_2d_out.e-s003  '
-              'phase_transition_2d_out.e-s004'
+    exodiff = 'phase_transition_2d_out.e  phase_transition_2d_out.e-s002  phase_transition_2d_out.e-s003  phase_transition_2d_out.e-s004'
     map = false
     unique_id = true
     abs_zero = 1e-8
     prereq = phase_transition_2d
-    requirement = 'The XFEM module shall provide an ability to solve a 2d simple phase transition '
-                  'problem in which the phase boundary is defined by and XFEM surface and the '
-                  'interface velocity depends on the jump of variables and gradients across the '
-                  'interface using the automatic differentiation capability.'
+    requirement = 'The XFEM module shall provide an ability to solve a 2d simple phase transition problem in which the phase boundary is defined by and XFEM surface and the interface velocity depends on the jump of variables and gradients across the interface using the automatic differentiation capability.'
     design = 'LevelSetBiMaterialReal.md'
     issues = '#15437'
   []

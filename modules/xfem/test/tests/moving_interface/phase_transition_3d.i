@@ -4,20 +4,18 @@
 []
 
 [Mesh]
-  [gen]
-    type = GeneratedMeshGenerator
-    dim = 3
-    nx = 11
-    ny = 1
-    nz = 1
-    xmin = 0.0
-    xmax = 20.0
-    ymin = 0.0
-    ymax = 5.0
-    zmin = 0.0
-    zmax = 5.0
-    elem_type = HEX8
-  []
+  type = GeneratedMesh
+  dim = 3
+  nx = 11
+  ny = 1
+  nz = 1
+  xmin = 0
+  xmax = 2
+  ymin = 0
+  ymax = 1
+  zmin = 0
+  zmax = 1
+  elem_type = HEX8
 []
 
 [XFEM]
@@ -34,16 +32,17 @@
     value_at_interface_uo = value_uo
   []
   [value_uo]
-    type = NodeValueAtXFEMInterface
+    type = PointValueAtXFEMInterface
     variable = 'u'
-    interface_mesh_cut_userobject = 'cut_mesh'
-    execute_on = TIMESTEP_END
+    geometric_cut_userobject = 'moving_line_segments'
+    execute_on = 'nonlinear'
     level_set_var = ls
+    is_3d = true
   []
-  [cut_mesh]
+  [moving_line_segments]
     type = InterfaceMeshCut3DUserObject
-    mesh_file = flat_interface_2d.e
-    interface_velocity_uo = velocity
+    mesh_file = interface.xda
+    interface_velocity = velocity
     heal_always = true
   []
 []
@@ -57,7 +56,7 @@
   [ic_u]
     type = FunctionIC
     variable = u
-    function = 'if(x<5.01, 2, 1)'
+    function = 'if(x<0.51, 2, 1)'
   []
 []
 
@@ -71,7 +70,7 @@
 [Constraints]
   [u_constraint]
     type = XFEMEqualValueAtInterface
-    geometric_cut_userobject = 'cut_mesh'
+    geometric_cut_userobject = 'moving_line_segments'
     use_displaced_mesh = false
     variable = u
     value = 2
@@ -94,9 +93,9 @@
 [AuxKernels]
   [ls]
     type = MeshCutLevelSetAux
-    mesh_cut_user_object = cut_mesh
+    mesh_cut_user_object = moving_line_segments
     variable = ls
-    execute_on = 'TIMESTEP_BEGIN'
+    execute_on = 'TIMESTEP_BEGIN TIMESTEP_END'
   []
 []
 
@@ -117,13 +116,14 @@
     levelset_negative_base = 'B'
     level_set_var = ls
     prop_name = diffusion_coefficient
+    outputs = all
   []
 []
 
 [BCs]
   # Define boundary conditions
   [left_u]
-    type = DirichletBC
+    type = PresetBC
     variable = u
     value = 2
     boundary = left
@@ -140,18 +140,20 @@
 [Executioner]
   type = Transient
   solve_type = 'PJFNK'
+  # petsc_options_iname = '-pc_type -pc_hypre_type'
+  # petsc_options_value = 'hypre boomeramg'
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'lu'
   line_search = 'none'
 
   l_tol = 1e-3
   nl_max_its = 15
-  nl_rel_tol = 1e-8
-  nl_abs_tol = 1e-8
+  nl_rel_tol = 1e-10
+  nl_abs_tol = 1e-10
 
   start_time = 0.0
-  dt = 1
-  num_steps = 5
+  dt = 0.01
+  num_steps = 2
   max_xfem_update = 1
 []
 
@@ -159,4 +161,9 @@
   execute_on = timestep_end
   exodus = true
   perf_graph = true
+  [console]
+    type = Console
+    output_linear = true
+  []
+  csv = true
 []

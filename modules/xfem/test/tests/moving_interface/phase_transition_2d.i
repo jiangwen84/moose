@@ -114,13 +114,14 @@
     levelset_negative_base = 'B'
     level_set_var = ls
     prop_name = diffusion_coefficient
+    outputs = all
   []
 []
 
 [BCs]
   # Define boundary conditions
   [left_u]
-    type = DirichletBC
+    type = PresetBC
     variable = u
     value = 2
     boundary = left
@@ -137,18 +138,20 @@
 [Executioner]
   type = Transient
   solve_type = 'PJFNK'
+  # petsc_options_iname = '-pc_type -pc_hypre_type'
+  # petsc_options_value = 'hypre boomeramg'
   petsc_options_iname = '-pc_type'
   petsc_options_value = 'lu'
   line_search = 'none'
 
   l_tol = 1e-3
   nl_max_its = 15
-  nl_rel_tol = 1e-9
-  nl_abs_tol = 1e-9
+  nl_rel_tol = 1e-10
+  nl_abs_tol = 1e-10
 
   start_time = 0.0
-  dt = 1
-  num_steps = 5
+  dt = 0.01
+  num_steps = 2
   max_xfem_update = 1
 []
 

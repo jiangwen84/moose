@@ -10,7 +10,10 @@
 #include "NodeValueAtXFEMInterface.h"
 #include "MooseVariableFE.h"
 #include "XFEM.h"
-#include "InterfaceMeshCutUserObjectBase.h"
+#include "LineSegmentCutSetUserObject.h"
+#include "InterfaceMeshCut3DUserObject.h"
+
+#include "libmesh/mesh_tools.h"
 #include "libmesh/parallel_algebra.h"
 #include "libmesh/parallel.h"
 
@@ -27,6 +30,7 @@ NodeValueAtXFEMInterface::validParams()
       "Name of InterfaceMeshCutUserObject that provides cut locations to this UserObject.");
   params.addRequiredParam<VariableName>(
       "level_set_var", "The name of level set variable used to represent the interface");
+  params.addParam<bool>("is_3d", false, "3D case");
   params.addClassDescription("Obtain field values and gradients on the interface.");
   return params;
 }
@@ -38,7 +42,8 @@ NodeValueAtXFEMInterface::NodeValueAtXFEMInterface(const InputParameters & param
     _level_set_var_number(
         _subproblem.getVariable(_tid, parameters.get<VariableName>("level_set_var")).number()),
     _system(_subproblem.getSystem(getParam<VariableName>("level_set_var"))),
-    _solution(*_system.current_local_solution.get())
+    _solution(*_system.current_local_solution.get()),
+    _is_3d(getParam<bool>("is_3d"))
 {
 }
 
@@ -50,15 +55,39 @@ NodeValueAtXFEMInterface::initialize()
   if (_xfem == nullptr)
     mooseError("Problem casting to XFEM in NodeValueAtXFEMInterface");
 
-  const UserObject * uo =
-      &(_fe_problem.getUserObjectBase(getParam<UserObjectName>("interface_mesh_cut_userobject")));
+  if (!_is_3d)
+  {
+    const UserObject * uo =
+        &(_fe_problem.getUserObjectBase(getParam<UserObjectName>("geometric_cut_userobject")));
 
-  if (dynamic_cast<const InterfaceMeshCutUserObjectBase *>(uo) == nullptr)
-    mooseError("UserObject casting to InterfaceMeshCutUserObjectBase in NodeValueAtXFEMInterface");
+    if (dynamic_cast<const LineSegmentCutSetUserObject *>(uo) == nullptr)
+      mooseError("UserObject casting to GeometricCutUserObject in XFEMSingleVariableConstraint");
 
-  _mesh_cut = dynamic_cast<const InterfaceMeshCutUserObjectBase *>(uo);
-  _elem_pairs = _xfem->getXFEMCutElemPairs(_xfem->getGeometricCutID(_mesh_cut));
+    _geo_cut = dynamic_cast<const LineSegmentCutSetUserObject *>(uo);
+    _elem_pairs = _xfem->getXFEMCutElemPairs(_xfem->getGeometricCutID(_geo_cut));
+  }
+  else
+  {
+    const UserObject * uo =
+        &(_fe_problem.getUserObjectBase(getParam<UserObjectName>("geometric_cut_userobject")));
+
+    if (dynamic_cast<const InterfaceMeshCut3DUserObject *>(uo) == nullptr)
+      mooseError("UserObject casting to GeometricCutUserObject in XFEMSingleVariableConstraint");
+
+    _geo_cut_3d = dynamic_cast<const InterfaceMeshCut3DUserObject *>(uo);
+    _elem_pairs = _xfem->getXFEMCutElemPairs(_xfem->getGeometricCutID(_geo_cut_3d));
+  }
+
+  _xfem = MooseSharedNamespace::dynamic_pointer_cast<XFEM>(_fe_problem.getXFEM());
+  if (_xfem == nullptr)
+    mooseError("Problem casting to XFEM in PointValueAtXFEMInterface");
 }
+
+Point
+PointValueAtXFEMInterface::getPointCurrentLocation(unsigned int i) const
+{
+  return _points[i];
+};
 
 void
 NodeValueAtXFEMInterface::execute()
@@ -69,20 +98,44 @@ NodeValueAtXFEMInterface::execute()
   _grad_values_negative_level_set_side.clear();
   _nodes.clear();
 
-  std::shared_ptr<MeshBase> cutter_mesh = _mesh_cut->getCutterMesh();
-
-  for (const auto & node : cutter_mesh->node_ptr_range())
-    _nodes.push_back(*node);
-
-  _pl->enable_out_of_mesh_mode();
-
-  for (const auto & node : cutter_mesh->node_ptr_range())
+  if (!_is_3d)
   {
-    unsigned int i = node->id();
+    std::vector<Real> cut_data = _geo_cut->getCutData();
 
-    if ((*_pl)(*node) != nullptr)
+    const int line_cut_data_len = 6;
+    for (unsigned int i = 0; i < cut_data.size() / line_cut_data_len; ++i)
+    {
+      _points.push_back(
+          Point(cut_data[i * line_cut_data_len + 0], cut_data[i * line_cut_data_len + 1]));
+      if (i == cut_data.size() / line_cut_data_len - 1)
+        _points.push_back(
+            Point(cut_data[i * line_cut_data_len + 2], cut_data[i * line_cut_data_len + 3]));
+    }
+  }
+  else
+  {
+    std::shared_ptr<MeshBase> cut_mesh = _geo_cut_3d->getCutMesh();
+
+    for (const auto & node : cut_mesh->node_ptr_range())
+    {
+      Point p = *node;
+      _points.push_back(p);
+    }
+  }
+
+  BoundingBox bbox = _mesh.getInflatedProcessorBoundingBox(0.);
+
+  std::vector<Point> point_vec(1);
+
+  for (MooseIndex(_points) i = 0; i < _points.size(); ++i)
+  {
+    Point p = _points[i];
+
+    if (bbox.contains_point(p))
     {
       const Elem * elem = getElemContainingPoint(*node, /*positive_level_set = */ true);
+
+      std::cout << "i = " << i << ", p = " << p << std::endl;
 
       if (elem != nullptr)
       {
@@ -113,6 +166,11 @@ NodeValueAtXFEMInterface::execute()
       _grad_values_negative_level_set_side[i] = RealVectorValue(0);
     }
   }
+  // Take the value of the x component at only one point
+  _grad_x_positive_level_set_side = _grad_values_positive_level_set_side[0](0);
+  _grad_x_negative_level_set_side = _grad_values_negative_level_set_side[0](0);
+
+  _current_x = _points[0](0);
 }
 
 void
@@ -122,11 +180,14 @@ NodeValueAtXFEMInterface::finalize()
   _communicator.set_union(_grad_values_positive_level_set_side);
   _communicator.set_union(_values_negative_level_set_side);
   _communicator.set_union(_grad_values_negative_level_set_side);
+  //_communicator.set_union(_grad_x_positive_level_set_side);
+  //_communicator.set_union(_grad_x_negative_level_set_side);
 }
 
 const Elem *
 NodeValueAtXFEMInterface::getElemContainingPoint(const Node & p, bool positive_level_set)
 {
+  std::cout << "p = " << p << std::endl;
   const Elem * elem1 = (*_pl)(p);
 
   if (elem1->processor_id() != processor_id())
