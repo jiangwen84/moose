@@ -64,9 +64,6 @@ XFEMTestApp::associateSyntax(Syntax & /*syntax*/, ActionFactory & action_factory
 void
 XFEMTestApp::registerExecFlags(Factory & /*factory*/)
 {
-  registerUserObject(ExtraQPTest);
-  registerDiracKernel(ManagedSourceTest);
-  registerMaterial(StatefulTestMaterial);
 }
 
 extern "C" void
