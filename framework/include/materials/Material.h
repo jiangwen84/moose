@@ -23,7 +23,7 @@ InputParameters validParams<Material>();
 /**
  * Materials compute MaterialProperties.
  */
-class Material : public MaterialBase, public NeighborCoupleable, public MaterialPropertyInterface
+class Material : public MaterialBase, public Coupleable, public MaterialPropertyInterface
 {
 public:
   static InputParameters validParams();
