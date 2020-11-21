@@ -1,0 +1,13 @@
+reset
+create Cylinder height 1.2 radius 0.46 
+move Volume 1  location 0 0  0.55 include_merged 
+volume 1  size 0.5
+mesh volume 1
+block 1 surface 1  
+block 1  element type quad4
+#rotate Volume 1  angle 13  about Z include_merged 
+
+undo group begin
+set large exodus file off
+export mesh "/Users/jianw/projects/moose1/modules/xfem/test/tests/moving_interface/cylinder.e" dimension 3 block 1 overwrite
+undo group end

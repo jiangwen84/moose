@@ -14,37 +14,23 @@
   [gen]
     type = GeneratedMeshGenerator
     dim = 3
-    nx = 12
-    ny = 12
-    nz = 1
+    nx = 2
+    ny = 1
+    nz = 3
     xmin = 0.0
-    xmax = 1.0
+    xmax = 2.0
     ymin = 0.0
     ymax = 1.0
     zmin = 0.0
     zmax = 1.0
     elem_type = HEX8
   []
-  [./box1]
-    type = BoundingBoxNodeSetGenerator
-    new_boundary = box1
-    bottom_left = '0 0 0'
-    top_right = '0.1 0.1 1.0'
-    input = gen
-  [../]
-  [./box2]
-    type = BoundingBoxNodeSetGenerator
-    new_boundary = box2
-    bottom_left = '0.8 0.8 0'
-    top_right = '1.0 1.0 1.0'
-    input = box1
-  [../]
 []
 
 [UserObjects]
   [./cut_mesh]
     type = InterfaceMeshCut3DUserObject
-    mesh_file = cylinder.e
+    mesh_file = debug.xda
     velocity = 0.0
     heal_always = true
   [../]
@@ -80,13 +66,11 @@
 # []
 
 [Modules/TensorMechanics/Master]
-  displacements = 'disp_x disp_y disp_z'
   [./all]
     strain = SMALL
     add_variables = true
     incremental = false
     generate_output = 'stress_xx stress_yy stress_zz vonmises_stress'
-    displacements = 'disp_x disp_y disp_z'
   [../]
 []
 
@@ -115,7 +99,6 @@
   [../]
   [./stress]
     type = ComputeLinearElasticStress
-    displacements = 'disp_x disp_y disp_z'
   [../]
 []
 
@@ -132,41 +115,41 @@
     boundary = back
     value = 1
   [../]
-  [box1_x]
+  [back_x]
     type = DirichletBC
     variable = disp_x
     value = 0
-    boundary = box1
+    boundary = back
   []
-  [box1_y]
+  [back_y]
     type = DirichletBC
     variable = disp_y
     value = 0
-    boundary = box1
+    boundary = back
   []
-  [box1_z]
+  [back_z]
     type = DirichletBC
     variable = disp_z
     value = 0
-    boundary = box1
+    boundary = back
   []
-  [box2_x]
+  [front_x]
     type = FunctionDirichletBC
     variable = disp_x
+    function = 0
+    boundary = front
+  []
+  [front_y]
+    type = FunctionDirichletBC
+    variable = disp_y
+    function = 0
+    boundary = front
+  []
+  [front_z]
+    type = FunctionDirichletBC
+    variable = disp_z
     function = '0.001*t'
-    boundary = box2
-  []
-  [box2_y]
-    type = FunctionDirichletBC
-    variable = disp_y
-    function = '0.005*t'
-    boundary = box2
-  []
-  [box2_z]
-    type = DirichletBC
-    variable = disp_z
-    value = 0
-    boundary = box2
+    boundary = front
   []
 []
 

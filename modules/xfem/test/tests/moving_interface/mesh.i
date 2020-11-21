@@ -1,4 +1,4 @@
 [Mesh]
   type = FileMesh
-  file = mesh_edge_crack.xda
+  file = cut_mesh1.xda
 []
