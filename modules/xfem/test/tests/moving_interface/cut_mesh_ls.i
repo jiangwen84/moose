@@ -8,18 +8,17 @@
   geometric_cut_userobjects = 'cut_mesh'
   qrule = volfrac
   output_cut_plane = true
-  debug_output_level = 3
 []
 
 [Mesh]
   [gen]
     type = GeneratedMeshGenerator
     dim = 3
-    nx = 2
-    ny = 1
-    nz = 3
+    nx = 5
+    ny = 5
+    nz = 5
     xmin = 0.0
-    xmax = 2.0
+    xmax = 1.0
     ymin = 0.0
     ymax = 1.0
     zmin = 0.0
@@ -36,7 +35,7 @@
   [./box2]
     type = BoundingBoxNodeSetGenerator
     new_boundary = box2
-    bottom_left = '0.8 0.8 0'
+    bottom_left = '0.8 0.8 0.8'
     top_right = '1.0 1.0 1.0'
     input = box1
   [../]
@@ -45,8 +44,8 @@
 [UserObjects]
   [./cut_mesh]
     type = InterfaceMeshCut3DUserObject
-    mesh_file = debug.xda
-    velocity = 0.1
+    mesh_file = cylinder.e
+    velocity = 0.1111
     heal_always = true
   [../]
 []
@@ -72,25 +71,41 @@
 #     function = ls_func
 #   [../]
 # []
-#
-# [Functions]
-#   [./ls_func]
-#     type = ParsedFunction
-#     value = 'sqrt(x*x+y*y)-0.46'
-#   [../]
-# []
+
+[Functions]
+  [./ls_func]
+    type = ParsedFunction
+    value = 'sqrt(x*x+y*y+z*z)-0.4'
+  [../]
+[]
 
 [Modules/TensorMechanics/Master]
+  displacements = 'disp_x disp_y disp_z'
   [./all]
     strain = SMALL
     add_variables = true
     incremental = false
     generate_output = 'stress_xx stress_yy stress_zz vonmises_stress'
+    displacements = 'disp_x disp_y disp_z'
   [../]
 []
 
 [Variables]
   [./u]
+  [../]
+[]
+
+[AuxVariables]
+  [./ls]
+  [../]
+[]
+
+[AuxKernels]
+  [./ls]
+    type = MeshCutLevelSetAux
+    mesh_cut_user_object = cut_mesh
+    variable = ls
+    execute_on = 'TIMESTEP_END'
   [../]
 []
 
@@ -134,37 +149,37 @@
     type = DirichletBC
     variable = disp_x
     value = 0
-    boundary = back
+    boundary = box1
   []
   [box1_y]
     type = DirichletBC
     variable = disp_y
     value = 0
-    boundary = back
+    boundary = box1
   []
   [box1_z]
     type = DirichletBC
     variable = disp_z
     value = 0
-    boundary = back
+    boundary = box1
   []
   [box2_x]
     type = FunctionDirichletBC
     variable = disp_x
-    function = '0'
-    boundary = front
+    function = '0.005*t'
+    boundary = box2
   []
   [box2_y]
     type = FunctionDirichletBC
     variable = disp_y
-    function = '0'
-    boundary = front
+    function = '0.005*t'
+    boundary = box2
   []
   [box2_z]
     type = FunctionDirichletBC
     variable = disp_z
     function = '0.005*t'
-    boundary = front
+    boundary = box2
   []
 []
 
@@ -178,14 +193,12 @@
   l_max_its = 20
   l_tol = 1e-3
   nl_max_its = 15
-  nl_rel_tol = 1e-6
-  nl_abs_tol = 1e-5
-
-  line_search = 'none'
+  nl_rel_tol = 1e-10
+  nl_abs_tol = 1e-10
 
   start_time = 0.0
   dt = 1
-  end_time = 1
+  end_time = 6
 
   max_xfem_update = 1
 []

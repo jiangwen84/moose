@@ -1,24 +1,23 @@
 reset
-create sphere radius 0.87
-move Volume 1  location -0.3 -0.3 0.5 include_merged 
-volume 1  size 0.1
+create sphere radius 0.33
+#move Volume 1  location -0.3 -0.3 0.5 include_merged 
+volume 1  size 0.005
 
-#volume 1  scheme Sphere 
-#mesh volume 1 
-#set duplicate block elements off
-#block 1 surface 1  
-#block 1  element type quad4
-
-volume 1  scheme Tetmesh
-set tetmesher interior points on 
-set tetmesher optimize level 3  overconstrained  off sliver  off 
-set tetmesher boundary recovery  off 
-volume 1  tetmesh growth_factor 
+volume 1  scheme Sphere 
 mesh volume 1 
+set duplicate block elements off
 block 1 surface 1  
-block 1  element type tri3
+block 1  element type quad4
 
-rotate Volume 1  angle 13  about Z include_merged 
+#volume 1  scheme Tetmesh
+
+#mesh volume 1 
+#block 1 surface 1  
+#block 1  element type tri3
+
+rotate Volume 1  angle 11  about Z include_merged 
+rotate Volume 1  angle 11  about Y  include_merged 
+rotate Volume 1  angle 11  about X  include_merged 
 
 undo group begin
 set large exodus file off

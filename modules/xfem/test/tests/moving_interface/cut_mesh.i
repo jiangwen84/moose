@@ -14,9 +14,9 @@
   [gen]
     type = GeneratedMeshGenerator
     dim = 3
-    nx = 12
-    ny = 12
-    nz = 1
+    nx = 11
+    ny = 11
+    nz = 11
     xmin = 0.0
     xmax = 1.0
     ymin = 0.0
@@ -29,13 +29,13 @@
     type = BoundingBoxNodeSetGenerator
     new_boundary = box1
     bottom_left = '0 0 0'
-    top_right = '0.1 0.1 1.0'
+    top_right = '0.1 0.1 0.1'
     input = gen
   [../]
   [./box2]
     type = BoundingBoxNodeSetGenerator
     new_boundary = box2
-    bottom_left = '0.8 0.8 0'
+    bottom_left = '0.8 0.8 0.8'
     top_right = '1.0 1.0 1.0'
     input = box1
   [../]
@@ -45,7 +45,7 @@
   [./cut_mesh]
     type = InterfaceMeshCut3DUserObject
     mesh_file = cylinder.e
-    velocity = 0.0
+    velocity = 0.1111
     heal_always = true
   [../]
 []
@@ -71,13 +71,13 @@
 #     function = ls_func
 #   [../]
 # []
-#
-# [Functions]
-#   [./ls_func]
-#     type = ParsedFunction
-#     value = 'sqrt(x*x+y*y)-0.46'
-#   [../]
-# []
+
+[Functions]
+  [./ls_func]
+    type = ParsedFunction
+    value = 'sqrt(x*x+y*y+z*z)-0.4'
+  [../]
+[]
 
 [Modules/TensorMechanics/Master]
   displacements = 'disp_x disp_y disp_z'
@@ -115,7 +115,6 @@
   [../]
   [./stress]
     type = ComputeLinearElasticStress
-    displacements = 'disp_x disp_y disp_z'
   [../]
 []
 
@@ -153,7 +152,7 @@
   [box2_x]
     type = FunctionDirichletBC
     variable = disp_x
-    function = '0.001*t'
+    function = '0.005*t'
     boundary = box2
   []
   [box2_y]
@@ -163,9 +162,9 @@
     boundary = box2
   []
   [box2_z]
-    type = DirichletBC
+    type = FunctionDirichletBC
     variable = disp_z
-    value = 0
+    function = '0.005*t'
     boundary = box2
   []
 []
@@ -180,12 +179,12 @@
   l_max_its = 20
   l_tol = 1e-3
   nl_max_its = 15
-  nl_rel_tol = 1e-6
-  nl_abs_tol = 1e-5
+  nl_rel_tol = 1e-10
+  nl_abs_tol = 1e-10
 
   start_time = 0.0
   dt = 1
-  end_time = 4
+  end_time = 6
 
   max_xfem_update = 1
 []

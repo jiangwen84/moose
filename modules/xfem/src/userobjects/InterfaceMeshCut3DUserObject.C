@@ -44,7 +44,8 @@ InterfaceMeshCut3DUserObject::InterfaceMeshCut3DUserObject(const InputParameters
 {
   // only the xda type is currently supported
   MeshFileName xfem_cut_mesh_file = getParam<MeshFileName>("mesh_file");
-  _cut_mesh = libmesh_make_unique<ReplicatedMesh>(_communicator);
+  // _cut_mesh = libmesh_make_unique<ReplicatedMesh>(_communicator);
+  _cut_mesh = std::make_shared<ReplicatedMesh>(_communicator);
   _cut_mesh->read(xfem_cut_mesh_file);
 
   // test element type; only tri3 elements are allowed
@@ -65,7 +66,7 @@ InterfaceMeshCut3DUserObject::initialSetup()
 void
 InterfaceMeshCut3DUserObject::initialize()
 {
-  if (_t_step == 0)
+  if (_t_step == 1)
     return;
 
   std::vector<Point> new_position(_cut_mesh->n_nodes());
@@ -89,6 +90,86 @@ InterfaceMeshCut3DUserObject::initialize()
 
   _exodus_io->write(name);
   // exodus_helper->write_timestep(_t_step, _t);
+
+  _pseudo_normal.clear();
+
+  unsigned num_elem_connect_to_node = 0;
+
+  for (const auto & cut_elem : _cut_mesh->element_ptr_range())
+  {
+    std::vector<Point> vertices{
+        cut_elem->node_ref(0), cut_elem->node_ref(1), cut_elem->node_ref(2)};
+    std::array<Point, 7> normal;
+    Plane elem_plane(vertices[0], vertices[1], vertices[2]);
+    normal[0] = 2.0 * libMesh::pi * elem_plane.unit_normal(vertices[0]);
+
+    for (unsigned int i = 0; i < cut_elem->n_nodes(); i++)
+    {
+      Point normal_at_node(0.0);
+      const Node & node = cut_elem->node_ref(i);
+      for (const auto & cut_elem2 : _cut_mesh->element_ptr_range())
+      {
+        for (unsigned int j = 0; j < cut_elem2->n_nodes(); j++)
+        {
+          const Node & node_in_elem = cut_elem2->node_ref(j);
+          if (node_in_elem == node)
+          {
+            std::vector<Point> vertices{
+                cut_elem2->node_ref(0), cut_elem2->node_ref(1), cut_elem2->node_ref(2)};
+            Plane elem_plane(vertices[0], vertices[1], vertices[2]);
+            Point normal_at_node_j = elem_plane.unit_normal(vertices[0]);
+            unsigned int m = j + 1 < 3 ? j + 1 : j + 1 - 3;
+            unsigned int n = j + 2 < 3 ? j + 2 : j + 2 - 3;
+            Point line_1 = cut_elem->node_ref(j) - cut_elem->node_ref(m);
+            Point line_2 = cut_elem->node_ref(j) - cut_elem->node_ref(n);
+            Real dot = line_1 * line_2;
+            Real lenSq1 = line_1 * line_1;
+            Real lenSq2 = line_2 * line_2;
+            Real angle = std::acos(dot / std::sqrt(lenSq1 * lenSq2));
+            normal_at_node += normal_at_node_j * angle;
+            break;
+          }
+        }
+      }
+      normal[1 + i] = normal_at_node;
+    }
+
+    for (unsigned int i = 0; i < cut_elem->n_sides(); i++)
+    {
+      std::vector<Point> vertices{
+          cut_elem->node_ref(0), cut_elem->node_ref(1), cut_elem->node_ref(2)};
+
+      Plane elem_plane(vertices[0], vertices[1], vertices[2]);
+      Point normal_at_edge = libMesh::pi * elem_plane.unit_normal(vertices[0]);
+
+      const Elem * neighbor = cut_elem->neighbor_ptr(i);
+
+      if (neighbor != nullptr)
+      {
+        std::vector<Point> vertices{
+            neighbor->node_ref(0), neighbor->node_ref(1), neighbor->node_ref(2)};
+
+        Plane elem_plane(vertices[0], vertices[1], vertices[2]);
+        normal_at_edge += libMesh::pi * elem_plane.unit_normal(vertices[0]);
+      }
+      normal[4 + i] = normal_at_edge;
+    }
+    // std::cout << "normal[0] = " << normal[0] << std::endl;
+    // std::cout << "normal[1] = " << normal[1] << std::endl;
+    // std::cout << "normal[2] = " << normal[2] << std::endl;
+    // std::cout << "normal[3] = " << normal[3] << std::endl;
+    // std::cout << "normal[4] = " << normal[4] << std::endl;
+    // std::cout << "normal[5] = " << normal[5] << std::endl;
+    // std::cout << "normal[6] = " << normal[6] << std::endl;
+    _pseudo_normal.insert(std::make_pair(cut_elem->id(), normal));
+  }
+
+  // for (auto const & x : _pseudo_normal)
+  // {
+  //   std::cout << x.first              // string (key)
+  //             << ':' << (x.second)[1] // string's value
+  //             << std::endl;
+  // }
 }
 
 Point
@@ -108,7 +189,6 @@ InterfaceMeshCut3DUserObject::findNormalatNode(const Node & node)
       {
         num_elem_connect_to_node++;
         Plane elem_plane(vertices[0], vertices[1], vertices[2]);
-        Point point = vertices[0];
         normal += elem_plane.unit_normal(vertices[0]);
         break;
       }
@@ -136,6 +216,7 @@ InterfaceMeshCut3DUserObject::cutElementByGeometry(const Elem * elem,
 // the planar mesh
 // TODO: Time evolving cuts not yet supported in 3D (hence the lack of use of the time variable)
 {
+  return false;
   bool elem_cut = false;
 
   if (elem->dim() != _elem_dim)
@@ -176,7 +257,8 @@ InterfaceMeshCut3DUserObject::cutElementByGeometry(const Elem * elem,
         }
 
         Point intersection;
-        if (intersectWithEdge(*node1, *node2, vertices, intersection))
+        if (intersectWithEdge(*node1, *node2, vertices, intersection) &&
+            std::find(cut_edges.begin(), cut_edges.end(), j) == cut_edges.end())
         {
           cut_edges.push_back(j);
           cut_pos.emplace_back(getRelativePosition(*node1, *node2, intersection));
@@ -249,6 +331,7 @@ InterfaceMeshCut3DUserObject::intersectWithEdge(const Point & p1,
       has_intersection = true;
     }
   }
+
   return has_intersection;
 }
 
@@ -290,11 +373,16 @@ InterfaceMeshCut3DUserObject::isInsideCutPlane(const std::vector<Point> & vertic
     Point middle2p = p - 0.5 * (vertices[i] + vertices[iplus1]);
     const Point side_tang = vertices[iplus1] - vertices[i];
     Point side_norm = side_tang.cross(normal);
+
     Xfem::normalizePoint(middle2p);
     Xfem::normalizePoint(side_norm);
-    if (middle2p * side_norm <= 0.0)
+
+    if (middle2p * side_norm <= 0)
+    {
       counter += 1;
+    }
   }
+
   if (counter == n_node)
     inside = true;
   return inside;

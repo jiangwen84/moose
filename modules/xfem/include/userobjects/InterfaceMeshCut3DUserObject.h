@@ -36,6 +36,9 @@ public:
   virtual const std::vector<Point>
   getCrackFrontPoints(unsigned int num_crack_front_points) const override;
 
+  std::shared_ptr<MeshBase> getCutMesh() const { return _cut_mesh; };
+  const auto * getPseudoNormal() const { return &_pseudo_normal; };
+
   virtual bool cutElementByGeometry(const Elem * elem,
                                     std::vector<Xfem::CutEdge> & cut_edges,
                                     std::vector<Xfem::CutNode> & cut_nodes,
@@ -52,7 +55,8 @@ public:
 
 protected:
   /// The cutter mesh
-  std::unique_ptr<MeshBase> _cut_mesh;
+  // std::unique_ptr<MeshBase> _cut_mesh;
+  std::shared_ptr<MeshBase> _cut_mesh;
 
   std::shared_ptr<ExodusII_IO> _exodus_io;
 
@@ -94,4 +98,6 @@ protected:
     Parsed functions of front growth
    */
   const Function & _velocity;
+
+  std::map<unsigned int, std::array<Point, 7>> _pseudo_normal;
 };

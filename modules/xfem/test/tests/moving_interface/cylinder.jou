@@ -1,11 +1,18 @@
 reset
-create Cylinder height 1.2 radius 0.46 
-move Volume 1  location 0 0  0.55 include_merged 
-volume 1  size 0.5
+create Cylinder height 1.2 radius 0.4
+move Volume 1  location 0 0  0.55 include_merged
+volume 1  size 0.1
+
+volume 1  scheme Tetmesh
+set tetmesher interior points on 
+set tetmesher optimize level 3  overconstrained  off sliver  off 
+set tetmesher boundary recovery  off 
+volume 1  tetmesh growth_factor 1
+
 mesh volume 1
-block 1 surface 1  
-block 1  element type quad4
-#rotate Volume 1  angle 13  about Z include_merged 
+block 1 surface 1
+block 1  element type tri3
+#rotate Volume 1  angle 13  about Z include_merged
 
 undo group begin
 set large exodus file off

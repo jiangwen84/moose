@@ -1,4 +1,4 @@
 [Mesh]
   type = FileMesh
-  file = cut_mesh1.xda
+  file = double_torus.xda
 []
