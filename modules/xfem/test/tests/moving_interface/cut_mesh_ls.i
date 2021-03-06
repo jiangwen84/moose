@@ -14,9 +14,9 @@
   [gen]
     type = GeneratedMeshGenerator
     dim = 3
-    nx = 5
-    ny = 5
-    nz = 5
+    nx = 7
+    ny = 7
+    nz = 7
     xmin = 0.0
     xmax = 1.0
     ymin = 0.0
@@ -42,40 +42,26 @@
 []
 
 [UserObjects]
+  [./velocity]
+    type = XFEMPhaseTransitionMovingInterfaceVelocity
+    diffusivity_at_positive_level_set = 5
+    diffusivity_at_negative_level_set = 1
+    equilibrium_concentration_jump = 1
+    value_at_interface_uo = value_uo
+  [../]
+  [./value_uo]
+    type = NodeValueAtXFEMInterface
+    variable = 'u'
+    geometric_cut_userobject = 'cut_mesh'
+    execute_on = 'nonlinear'
+    level_set_var = ls
+  [../]
   [./cut_mesh]
     type = InterfaceMeshCut3DUserObject
     mesh_file = cylinder.e
-    velocity = 0.1111
+    #velocity = 0.1111
+    interface_velocity = velocity
     heal_always = true
-  [../]
-[]
-
-# [UserObjects]
-#   [./level_set_cut_uo]
-#     type = LevelSetCutUserObject
-#     level_set_var = ls
-#   [../]
-# []
-#
-# [AuxVariables]
-#   [./ls]
-#     order = FIRST
-#     family = LAGRANGE
-#   [../]
-# []
-#
-# [AuxKernels]
-#   [./ls_function]
-#     type = FunctionAux
-#     variable = ls
-#     function = ls_func
-#   [../]
-# []
-
-[Functions]
-  [./ls_func]
-    type = ParsedFunction
-    value = 'sqrt(x*x+y*y+z*z)-0.4'
   [../]
 []
 
@@ -105,7 +91,7 @@
     type = MeshCutLevelSetAux
     mesh_cut_user_object = cut_mesh
     variable = ls
-    execute_on = 'TIMESTEP_END'
+    execute_on = 'TIMESTEP_BEGIN'
   [../]
 []
 
@@ -198,14 +184,14 @@
 
   start_time = 0.0
   dt = 1
-  end_time = 6
+  end_time = 4
 
   max_xfem_update = 1
 []
 
 [Outputs]
   exodus = true
-  execute_on = timestep_end
+  execute_on = 'TIMESTEP_BEGIN TIMESTEP_END'
   csv = true
   perf_graph = true
   [./console]

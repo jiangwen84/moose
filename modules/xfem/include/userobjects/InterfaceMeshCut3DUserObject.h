@@ -10,19 +10,14 @@
 #pragma once
 
 #include "GeometricCutUserObject.h"
-
-#include "libmesh/exodusII_io.h"
-#include "libmesh/exodusII_io_helper.h"
-
 #include <array>
-
-class Function;
-
 /**
- * InterfaceMeshCut3DUserObject: (1) reads in a mesh describing the crack surface,
- * (2) uses the mesh to do initial cutting of 3D elements, and
- * (3) grows the mesh based on prescribed growth functions.
+ * InterfaceMeshCut3DUserObject: (1) reads in a mesh describing the interface,
+ * (2) uses the mesh to do cutting of 3D elements, and
+ * (3) grows the mesh based on intreface velocites.
  */
+
+class XFEMMovingInterfaceVelocityBase;
 
 class InterfaceMeshCut3DUserObject : public GeometricCutUserObject
 {
@@ -36,7 +31,7 @@ public:
   virtual const std::vector<Point>
   getCrackFrontPoints(unsigned int num_crack_front_points) const override;
 
-  std::shared_ptr<MeshBase> getCutMesh() const { return _cut_mesh; };
+  std::shared_ptr<MeshBase> getCutterMesh() const { return _cutter_mesh; };
   const auto * getPseudoNormal() const { return &_pseudo_normal; };
 
   virtual bool cutElementByGeometry(const Elem * elem,
@@ -54,21 +49,6 @@ public:
                                      Real time) const override;
 
 protected:
-  /// The cutter mesh
-  // std::unique_ptr<MeshBase> _cut_mesh;
-  std::shared_ptr<MeshBase> _cut_mesh;
-
-  std::shared_ptr<ExodusII_IO> _exodus_io;
-
-  /// The cutter mesh must be 2D
-  const unsigned int _cut_elem_dim = 2;
-
-  /// The structural mesh
-  MooseMesh & _mesh;
-
-  /// The structural mesh must be 3D only
-  const unsigned int _elem_dim = 3;
-
   /**
     Check if a line intersects with an element
    */
@@ -77,7 +57,7 @@ protected:
                                  const std::vector<Point> & _vertices,
                                  Point & pint) const;
 
-  Point findNormalatNode(const Node & node);
+  Point nodeNomal(const unsigned int & node_id);
 
   /**
     Check if point p is inside the edge p1-p2
@@ -94,10 +74,24 @@ protected:
    */
   bool isInsideCutPlane(const std::vector<Point> & _vertices, const Point & p) const;
 
-  /**
-    Parsed functions of front growth
-   */
-  const Function & _velocity;
+  /// The cutter mesh
+  std::shared_ptr<MeshBase> _cutter_mesh;
 
+  /// node to element map of cut mesh
+  std::map<dof_id_type, std::vector<dof_id_type>> _node_to_elem_map;
+
+  /// Pointer to XFEMMovingInterfaceVelocityBase object
+  const XFEMMovingInterfaceVelocityBase * _interface_velocity;
+
+  /// Map of pseudo normal of element plane, three nodes and three sides of each element
   std::map<unsigned int, std::array<Point, 7>> _pseudo_normal;
+
+  /// The Mesh we're using
+  MooseMesh & _mesh;
+
+  /// The points to evaluate at
+  std::vector<Point> _points;
+
+  /// Pointer to PointLocatorBase object
+  std::unique_ptr<PointLocatorBase> _pl;
 };

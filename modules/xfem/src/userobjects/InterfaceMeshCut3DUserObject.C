@@ -8,18 +8,8 @@
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
 #include "InterfaceMeshCut3DUserObject.h"
-
-#include "XFEMFuncs.h"
-#include "MooseError.h"
-#include "libmesh/string_to_enum.h"
-#include "MooseMesh.h"
-#include "libmesh/face_tri3.h"
-#include "libmesh/edge_edge2.h"
-#include "libmesh/serial_mesh.h"
+#include "XFEMMovingInterfaceVelocityBase.h"
 #include "libmesh/plane.h"
-#include "Function.h"
-
-#include "libmesh/exodusII_io.h"
 
 registerMooseObject("XFEMApp", InterfaceMeshCut3DUserObject);
 
@@ -30,119 +20,152 @@ InterfaceMeshCut3DUserObject::validParams()
   params.addRequiredParam<MeshFileName>(
       "mesh_file",
       "Mesh file for the XFEM geometric cut; currently only the xda type is supported");
-  params.addRequiredParam<FunctionName>("velocity", "velocity function for normal direction");
-  params.addClassDescription("Creates a UserObject for a mesh cutter in 3D problems");
+  params.addRequiredParam<UserObjectName>("interface_velocity",
+                                          "The name of userobject that computes the velocity.");
+  params.addClassDescription("Creates a UserObject for a mesh cutter in 3D interface problems");
   return params;
 }
 
-// this code does not allow predefined crack growth as a function of time
-// all inital cracks are defined at t_start = t_end = 0
 InterfaceMeshCut3DUserObject::InterfaceMeshCut3DUserObject(const InputParameters & parameters)
-  : GeometricCutUserObject(parameters),
-    _mesh(_subproblem.mesh()),
-    _velocity(getFunction("velocity"))
+  : GeometricCutUserObject(parameters), _mesh(_subproblem.mesh())
 {
-  // only the xda type is currently supported
-  MeshFileName xfem_cut_mesh_file = getParam<MeshFileName>("mesh_file");
-  // _cut_mesh = libmesh_make_unique<ReplicatedMesh>(_communicator);
-  _cut_mesh = std::make_shared<ReplicatedMesh>(_communicator);
-  _cut_mesh->read(xfem_cut_mesh_file);
+  MeshFileName xfem_cutter_mesh_file = getParam<MeshFileName>("mesh_file");
+  _cutter_mesh = std::make_shared<ReplicatedMesh>(_communicator);
+  _cutter_mesh->read(xfem_cutter_mesh_file);
 
-  // test element type; only tri3 elements are allowed
-  for (const auto & cut_elem : _cut_mesh->element_ptr_range())
-  {
-    if (cut_elem->dim() != _cut_elem_dim)
-      mooseError("The input cut mesh should have 2D elements only!");
-  }
+  // test element type: only tri3 elements are allowed
+  for (const auto & elem : _cutter_mesh->element_ptr_range())
+    if (elem->type() != TRI3)
+      mooseError(
+          "InterfaceMeshCut3DUserObject currently only supports TRI3 element in the cut mesh.");
 
-  _exodus_io = std::make_shared<ExodusII_IO>(*_cut_mesh);
+  const UserObject * uo =
+      &(_fe_problem.getUserObjectBase(getParam<UserObjectName>("interface_velocity")));
+
+  if (dynamic_cast<const XFEMMovingInterfaceVelocityBase *>(uo) == nullptr)
+    mooseError("UserObject casting to XFEMMovingInterfaceVelocityBase in "
+               "MovingLineSegmentCutSetUserObject");
+
+  _interface_velocity = dynamic_cast<const XFEMMovingInterfaceVelocityBase *>(uo);
+
+  const_cast<XFEMMovingInterfaceVelocityBase *>(_interface_velocity)->initialize();
 }
 
 void
 InterfaceMeshCut3DUserObject::initialSetup()
 {
+  for (const auto & elem : _cutter_mesh->element_ptr_range())
+    for (unsigned int n = 0; n < elem->n_nodes(); n++)
+      _node_to_elem_map[elem->node_id(n)].push_back(elem->id());
 }
 
 void
 InterfaceMeshCut3DUserObject::initialize()
 {
-  if (_t_step == 1)
+  if (_t_step == 0)
     return;
+  std::vector<Point> new_position(_cutter_mesh->n_nodes());
+  // std::string name = "interface_cut_mesh_" + _name;
+  // name += std::to_string(_t_step);
+  // name += ".e";
 
-  std::vector<Point> new_position(_cut_mesh->n_nodes());
-  for (const auto & node : _cut_mesh->node_ptr_range())
+  // std::shared_ptr<ExodusII_IO> _exodus_io = std::make_shared<ExodusII_IO>(*_cutter_mesh);
+  // _exodus_io->write(name);
+
+  _pl = _mesh.getPointLocator();
+  _pl->enable_out_of_mesh_mode();
+
+  std::map<unsigned int, Real> node_velocity;
+  Real sum = 0.0;
+  unsigned count = 0;
+  for (const auto & node : _cutter_mesh->node_ptr_range())
+  {
+    if ((*_pl)(*node) != nullptr)
+    {
+      Real velocity =
+          _interface_velocity->computeMovingInterfaceVelocity(node->id(), nodeNomal(node->id()));
+      node_velocity[node->id()] = velocity;
+      sum += velocity;
+      count++;
+    }
+  }
+
+  if (count == 0)
+    mooseError("No node of the cutter mesh is found inside the computational domain.");
+
+  Real average_velocity = sum / count;
+
+  for (const auto & node : _cutter_mesh->node_ptr_range())
+  {
+    if ((*_pl)(*node) == nullptr)
+      node_velocity[node->id()] = average_velocity;
+  }
+
+  // Real velocity = _interface_velocity->computeMovingInterfaceVelocity(2);
+  // Real velocity = 0.11;
+  for (const auto & node : _cutter_mesh->node_ptr_range())
   {
     Point p = *node;
-    p += _dt * findNormalatNode(*node) * _velocity.value(_t, p);
+    // p += _dt * nodeNomal(node->id()) * node_velocity[node->id()];
+    p += _dt * nodeNomal(node->id()) * 0.11;
     new_position[node->id()] = p;
   }
+  for (const auto & node : _cutter_mesh->node_ptr_range())
+    _cutter_mesh->node_ref(node->id()) = new_position[node->id()];
 
-  for (const auto & node : _cut_mesh->node_ptr_range())
-  {
-    _cut_mesh->node_ref(node->id()) = new_position[node->id()];
-  }
-
-  std::string name = "interface_cut_mesh_";
+  std::string name = "interface_cut_mesh_" + _name;
   name += std::to_string(_t_step);
   name += ".e";
-  //_cut_mesh->write(name);
-  // auto exodus_io = std::make_shared<ExodusII_IO>(*_cut_mesh);
 
+  std::shared_ptr<ExodusII_IO> _exodus_io = std::make_shared<ExodusII_IO>(*_cutter_mesh);
   _exodus_io->write(name);
-  // exodus_helper->write_timestep(_t_step, _t);
 
   _pseudo_normal.clear();
 
-  unsigned num_elem_connect_to_node = 0;
-
-  for (const auto & cut_elem : _cut_mesh->element_ptr_range())
+  for (const auto & elem : _cutter_mesh->element_ptr_range())
   {
-    std::vector<Point> vertices{
-        cut_elem->node_ref(0), cut_elem->node_ref(1), cut_elem->node_ref(2)};
+    std::vector<Point> vertices{elem->node_ref(0), elem->node_ref(1), elem->node_ref(2)};
     std::array<Point, 7> normal;
     Plane elem_plane(vertices[0], vertices[1], vertices[2]);
     normal[0] = 2.0 * libMesh::pi * elem_plane.unit_normal(vertices[0]);
 
-    for (unsigned int i = 0; i < cut_elem->n_nodes(); i++)
+    for (unsigned int i = 0; i < elem->n_nodes(); i++)
     {
       Point normal_at_node(0.0);
-      const Node & node = cut_elem->node_ref(i);
-      for (const auto & cut_elem2 : _cut_mesh->element_ptr_range())
+      const Node & node = elem->node_ref(i);
+
+      Real angle_sum = 0.0;
+
+      for (const auto & node_neigh_elem_id : _node_to_elem_map[node.id()])
       {
-        for (unsigned int j = 0; j < cut_elem2->n_nodes(); j++)
-        {
-          const Node & node_in_elem = cut_elem2->node_ref(j);
-          if (node_in_elem == node)
-          {
-            std::vector<Point> vertices{
-                cut_elem2->node_ref(0), cut_elem2->node_ref(1), cut_elem2->node_ref(2)};
-            Plane elem_plane(vertices[0], vertices[1], vertices[2]);
-            Point normal_at_node_j = elem_plane.unit_normal(vertices[0]);
-            unsigned int m = j + 1 < 3 ? j + 1 : j + 1 - 3;
-            unsigned int n = j + 2 < 3 ? j + 2 : j + 2 - 3;
-            Point line_1 = cut_elem->node_ref(j) - cut_elem->node_ref(m);
-            Point line_2 = cut_elem->node_ref(j) - cut_elem->node_ref(n);
-            Real dot = line_1 * line_2;
-            Real lenSq1 = line_1 * line_1;
-            Real lenSq2 = line_2 * line_2;
-            Real angle = std::acos(dot / std::sqrt(lenSq1 * lenSq2));
-            normal_at_node += normal_at_node_j * angle;
-            break;
-          }
-        }
+        const Elem & node_neigh_elem = _cutter_mesh->elem_ref(node_neigh_elem_id);
+        std::vector<Point> vertices{
+            node_neigh_elem.node_ref(0), node_neigh_elem.node_ref(1), node_neigh_elem.node_ref(2)};
+        Plane elem_plane(vertices[0], vertices[1], vertices[2]);
+        unsigned int j = node_neigh_elem.local_node(node.id());
+        Point normal_at_node_j = elem_plane.unit_normal(vertices[0]);
+        unsigned int m = j + 1 < 3 ? j + 1 : j + 1 - 3;
+        unsigned int n = j + 2 < 3 ? j + 2 : j + 2 - 3;
+        Point line_1 = node_neigh_elem.node_ref(j) - node_neigh_elem.node_ref(m);
+        Point line_2 = node_neigh_elem.node_ref(j) - node_neigh_elem.node_ref(n);
+        Real dot = line_1 * line_2;
+        Real lenSq1 = line_1 * line_1;
+        Real lenSq2 = line_2 * line_2;
+        Real angle = std::acos(dot / std::sqrt(lenSq1 * lenSq2));
+        normal_at_node += normal_at_node_j * angle;
+        angle_sum += angle;
       }
       normal[1 + i] = normal_at_node;
     }
 
-    for (unsigned int i = 0; i < cut_elem->n_sides(); i++)
+    for (unsigned int i = 0; i < elem->n_sides(); i++)
     {
-      std::vector<Point> vertices{
-          cut_elem->node_ref(0), cut_elem->node_ref(1), cut_elem->node_ref(2)};
+      std::vector<Point> vertices{elem->node_ref(0), elem->node_ref(1), elem->node_ref(2)};
 
       Plane elem_plane(vertices[0], vertices[1], vertices[2]);
       Point normal_at_edge = libMesh::pi * elem_plane.unit_normal(vertices[0]);
 
-      const Elem * neighbor = cut_elem->neighbor_ptr(i);
+      const Elem * neighbor = elem->neighbor_ptr(i);
 
       if (neighbor != nullptr)
       {
@@ -154,48 +177,24 @@ InterfaceMeshCut3DUserObject::initialize()
       }
       normal[4 + i] = normal_at_edge;
     }
-    // std::cout << "normal[0] = " << normal[0] << std::endl;
-    // std::cout << "normal[1] = " << normal[1] << std::endl;
-    // std::cout << "normal[2] = " << normal[2] << std::endl;
-    // std::cout << "normal[3] = " << normal[3] << std::endl;
-    // std::cout << "normal[4] = " << normal[4] << std::endl;
-    // std::cout << "normal[5] = " << normal[5] << std::endl;
-    // std::cout << "normal[6] = " << normal[6] << std::endl;
-    _pseudo_normal.insert(std::make_pair(cut_elem->id(), normal));
+    _pseudo_normal.insert(std::make_pair(elem->id(), normal));
   }
-
-  // for (auto const & x : _pseudo_normal)
-  // {
-  //   std::cout << x.first              // string (key)
-  //             << ':' << (x.second)[1] // string's value
-  //             << std::endl;
-  // }
 }
 
 Point
-InterfaceMeshCut3DUserObject::findNormalatNode(const Node & node)
+InterfaceMeshCut3DUserObject::nodeNomal(const unsigned int & node_id)
 {
   Point normal(0.0);
-  unsigned num_elem_connect_to_node = 0;
 
-  for (const auto & cut_elem : _cut_mesh->element_ptr_range())
+  for (const auto & node_neigh_elem_id : _node_to_elem_map[node_id])
   {
-    std::vector<Point> vertices{
-        cut_elem->node_ref(0), cut_elem->node_ref(1), cut_elem->node_ref(2)};
-
-    for (auto & node_in_elem : cut_elem->node_ref_range())
-    {
-      if (node_in_elem == node)
-      {
-        num_elem_connect_to_node++;
-        Plane elem_plane(vertices[0], vertices[1], vertices[2]);
-        normal += elem_plane.unit_normal(vertices[0]);
-        break;
-      }
-    }
+    const auto & elem = _cutter_mesh->elem_ref(node_neigh_elem_id);
+    Plane elem_plane(elem.node_ref(0), elem.node_ref(1), elem.node_ref(2));
+    normal += elem_plane.unit_normal(elem.node_ref(0));
   }
 
-  return normal / num_elem_connect_to_node;
+  unsigned int num = _node_to_elem_map[node_id].size();
+  return normal / num;
 }
 
 bool
@@ -212,14 +211,10 @@ bool
 InterfaceMeshCut3DUserObject::cutElementByGeometry(const Elem * elem,
                                                    std::vector<Xfem::CutFace> & cut_faces,
                                                    Real /*time*/) const
-// With the crack defined by a planar mesh, this method cuts a solid element by all elements in
-// the planar mesh
-// TODO: Time evolving cuts not yet supported in 3D (hence the lack of use of the time variable)
 {
-  return false;
   bool elem_cut = false;
 
-  if (elem->dim() != _elem_dim)
+  if (elem->dim() != 3)
     mooseError("The structural mesh to be cut by a surface mesh must be 3D!");
 
   for (unsigned int i = 0; i < elem->n_sides(); ++i)
@@ -246,7 +241,7 @@ InterfaceMeshCut3DUserObject::cutElementByGeometry(const Elem * elem,
       const Node * node1 = curr_edge->node_ptr(0);
       const Node * node2 = curr_edge->node_ptr(1);
 
-      for (const auto & cut_elem : _cut_mesh->element_ptr_range())
+      for (const auto & cut_elem : _cutter_mesh->element_ptr_range())
       {
         std::vector<Point> vertices;
 
@@ -298,7 +293,6 @@ InterfaceMeshCut3DUserObject::cutFragmentByGeometry(
     std::vector<Xfem::CutFace> & /*cut_faces*/,
     Real /*time*/) const
 {
-  // TODO: Need this for branching in 3D
   mooseError("cutFragmentByGeometry not yet implemented for 3D mesh cutting");
   return false;
 }

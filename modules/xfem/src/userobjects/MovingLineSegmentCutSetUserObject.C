@@ -67,9 +67,9 @@ MovingLineSegmentCutSetUserObject::execute()
     for (unsigned int i = 1; i < _interface_velocity->numberPoints(); ++i)
     {
       cut_data_copy[(i - 1) * line_cut_data_len + 0] +=
-          _interface_velocity->computeMovingInterfaceVelocity((i - 1)) * _dt;
+          _interface_velocity->computeMovingInterfaceVelocity((i - 1), Point(1.0)) * _dt;
       cut_data_copy[(i - 1) * line_cut_data_len + 2] +=
-          _interface_velocity->computeMovingInterfaceVelocity(i) * _dt;
+          _interface_velocity->computeMovingInterfaceVelocity(i, Point(1.0)) * _dt;
     }
   }
 
@@ -96,9 +96,9 @@ MovingLineSegmentCutSetUserObject::finalize()
     for (unsigned int i = 1; i < _interface_velocity->numberPoints(); ++i)
     {
       _cut_data[(i - 1) * line_cut_data_len + 0] +=
-          _interface_velocity->computeMovingInterfaceVelocity((i - 1)) * _dt;
+          _interface_velocity->computeMovingInterfaceVelocity((i - 1), Point(1.0)) * _dt;
       _cut_data[(i - 1) * line_cut_data_len + 2] +=
-          _interface_velocity->computeMovingInterfaceVelocity(i) * _dt;
+          _interface_velocity->computeMovingInterfaceVelocity(i, Point(1.0)) * _dt;
     }
   }
 

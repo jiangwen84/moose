@@ -30,7 +30,7 @@
   [./cut_mesh]
     type = InterfaceMeshCut3DUserObject
     mesh_file = bunny.xda
-    velocity = 0.002
+    #velocity = 0.002
     heal_always = true
   [../]
 []
