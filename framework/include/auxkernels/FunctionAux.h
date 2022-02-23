@@ -37,4 +37,5 @@ protected:
 
   /// Function being used to compute the value of this kernel
   const Function & _func;
+  const VariableValue & _c;
 };

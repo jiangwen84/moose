@@ -29,6 +29,7 @@ GenericFunctionMaterial::validParams()
                                   false,
                                   "Enable the declaration of old and older values",
                                   "all properties can implicitly become stateful");
+  params.addParam<Real>("factor",1,"factor");
   return params;
 }
 
@@ -36,7 +37,8 @@ GenericFunctionMaterial::GenericFunctionMaterial(const InputParameters & paramet
   : Material(parameters),
     _prop_names(getParam<std::vector<std::string>>("prop_names")),
     _prop_values(getParam<std::vector<FunctionName>>("prop_values")),
-    _enable_stateful(getParam<bool>("enable_stateful"))
+    _enable_stateful(getParam<bool>("enable_stateful")),
+    _factor(getParam<Real>("factor"))
 {
   unsigned int num_names = _prop_names.size();
   unsigned int num_values = _prop_values.size();
@@ -80,5 +82,5 @@ void
 GenericFunctionMaterial::computeQpFunctions()
 {
   for (unsigned int i = 0; i < _num_props; i++)
-    (*_properties[i])[_qp] = (*_functions[i]).value(_t, _q_point[_qp]);
+    (*_properties[i])[_qp] = (*_functions[i]).value(_t, _q_point[_qp]) * _factor;
 }

@@ -54,4 +54,6 @@ private:
 
   /// Flag for calling declareProperyOld/Older
   bool _enable_stateful;
+
+  Real _factor;
 };
