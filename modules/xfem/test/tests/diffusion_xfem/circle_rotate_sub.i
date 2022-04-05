@@ -1,41 +1,38 @@
 [Mesh]
   type = GeneratedMesh
   dim = 2
+  xmin = -1
   xmax = 1
+  ymin = -1
   ymax = 1
-  nx = 16
-  ny = 16
+  nx = 32
+  ny = 32
   uniform_refine = 2
-  elem_type = QUAD9
-  second_order = true
 []
 
-[Variables/phi]
-    family = LAGRANGE
+[Variables]
+  [./phi]
+  [../]
 []
 
 [AuxVariables]
-  [phi_0]
-    family = LAGRANGE
-  []
-  [marker]
-    family = MONOMIAL
-    order = CONSTANT
-  []
+  [./phi_0]
+  [../]
+  [./marker]
+  [../]
 []
 
 [Kernels]
-  [time]
+  [./time]
     type = TimeDerivative
     variable = phi
-  []
-  [reinit]
+  [../]
+  [./reinit]
     type = LevelSetOlssonReinitialization
     variable = phi
     phi_0 = phi_0
     epsilon = 0.03
-    use_modified_reinitilization_formulation = true
-  []
+  [../]
 []
 
 [Problem]
@@ -43,16 +40,11 @@
 []
 
 [UserObjects]
-  [arnold]
+  [./arnold]
     type = LevelSetOlssonTerminator
-    tol = 0.5
+    tol = 1
     min_steps = 3
-  []
-[]
-
-[Preconditioning/smp]
-    type = SMP
-    full = true
+  [../]
 []
 
 [Executioner]
@@ -63,6 +55,8 @@
   nl_abs_tol = 1e-14
   scheme = crank-nicolson
   line_search = none
+  petsc_options_iname = '-pc_type -pc_sub_type'
+  petsc_options_value = 'asm      ilu'
   dt = 0.003
 []
 
