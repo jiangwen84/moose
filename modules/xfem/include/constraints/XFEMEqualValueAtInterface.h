@@ -35,6 +35,17 @@ protected:
   /// Value at the interface
   Real _value;
 
+  Real _value_neighbor;
+
   /// Pointer to the XFEM controller object
   std::shared_ptr<XFEM> _xfem;
+
+  /// The variable number of the level set variable we are operating on
+  const unsigned int _level_set_var_number;
+
+  /// system reference
+  const System & _system;
+
+  /// the subproblem solution vector
+  const NumericVector<Number> & _solution;
 };

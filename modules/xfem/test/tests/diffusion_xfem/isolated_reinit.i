@@ -1,20 +1,12 @@
 [Mesh]
   type = GeneratedMesh
-  # dim = 2
-  # xmin = -1
-  # xmax = 1
-  # ymin = -1
-  # ymax = 1
-  # nx = 121
-  # ny = 121
-  # elem_type = TRI3
   dim = 2
   xmin = 0
-  xmax = 0.016
-  ymin = 0
-  ymax = 0.016
-  nx = 121
-  ny = 121
+  xmax = 0.06
+  ymin = 0.03
+  ymax = 0.06
+  nx = 201
+  ny = 101
 []
 
 [Variables]
@@ -46,7 +38,7 @@
     type = LevelSetOlssonReinitialization
     variable = phi
     phi_0 = phi_0
-    epsilon = 0.03
+    epsilon = 0.0005
     #use_modified_reinitilization_formulation = true
   []
 []

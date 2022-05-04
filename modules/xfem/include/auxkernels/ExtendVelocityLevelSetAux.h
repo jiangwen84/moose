@@ -42,5 +42,8 @@ protected:
   /// Mapping from point index and its gradient at the negative level set side
   std::map<unsigned int, RealVectorValue> _grad_values_negative_level_set_side;
 
+  /// Mapping from point index and its gradient at the negative level set side
+  std::map<unsigned int, RealVectorValue> _level_set_normal;
+
   std::map<unsigned int, Point> _qp_points;
 };

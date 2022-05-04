@@ -12,6 +12,7 @@
 #include "GeneralUserObject.h"
 #include "ElementPairLocator.h"
 #include "MooseVariableFE.h"
+#include "GeometricCutUserObject.h"
 
 class XFEM;
 class InterfaceMeshCutUserObjectBase;
@@ -61,6 +62,8 @@ public:
     return _grad_values_negative_level_set_side;
   };
 
+  std::map<unsigned int, RealVectorValue> getLevelSetNormal() const { return _level_set_normal; };
+
   unsigned int numberNodes() const { return _qp_points.size(); };
 
   std::map<unsigned int, Point> getQpPoint() const { return _qp_points; };
@@ -96,6 +99,9 @@ protected:
   /// Pointer to MooseVariableFEBase object
   MooseVariableFEBase * _var;
 
+  /// Pointer to MooseVariableFEBase object
+  MooseVariableFEBase * _var_level_set;
+
   /// The variable number of the level set variable we are operating on
   const unsigned int _level_set_var_number;
 
@@ -116,4 +122,7 @@ protected:
 
   /// Mapping from point index and its gradient at the negative level set side
   std::map<unsigned int, RealVectorValue> _grad_values_negative_level_set_side;
+
+  /// Mapping from point index and its gradient at the negative level set side
+  std::map<unsigned int, RealVectorValue> _level_set_normal;
 };

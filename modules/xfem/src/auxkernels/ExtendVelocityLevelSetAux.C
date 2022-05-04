@@ -36,9 +36,21 @@ Real
 ExtendVelocityLevelSetAux::computeValue()
 {
   _values_positive_level_set_side = _qp_value_uo.getValueAtPositiveLevelSet();
+  _values_negative_level_set_side = _qp_value_uo.getValueAtNegativeLevelSet();
+  _grad_values_positive_level_set_side = _qp_value_uo.getGradientAtPositiveLevelSet();
+  _grad_values_negative_level_set_side = _qp_value_uo.getGradientAtNegativeLevelSet();
+  _level_set_normal = _qp_value_uo.getLevelSetNormal();
 
-  // for (auto const & qp : _values_positive_level_set_side)
-  //   std::cout << "value = " << qp.second << std::endl;
+  // for (auto const & v : _grad_values_negative_level_set_side)
+  //   std::cout << "_grad_values_negative_level_set_side = " << v.second << std::endl;
+
+  // for (unsigned int i = 0; i < _grad_values_positive_level_set_side.size(); i++)
+  //   std::cout << "qp = " << _qp_points[i] << "term a = " <<
+  //   _grad_values_positive_level_set_side[i]
+  //             << ", term b = " << _level_set_normal[i]
+  //             << "dot product = " << _grad_values_positive_level_set_side[i] *
+  //             _level_set_normal[i]
+  //             << " value = " << _values_negative_level_set_side[i] << std::endl;
 
   _qp_points = _qp_value_uo.getQpPoint();
 
@@ -54,5 +66,16 @@ ExtendVelocityLevelSetAux::computeValue()
     }
   }
 
-  return _values_positive_level_set_side[index];
+  // std::cout << "grad u = " << _grad_values_negative_level_set_side[index] << std::endl;
+  // std::cout << "pos u = " << _values_positive_level_set_side[index] << std::endl;
+  // std::cout << "neg u = " << _values_negative_level_set_side[index] << std::endl;
+
+  // Real vel = -0.796e-5 * _grad_values_negative_level_set_side[index] * RealVectorValue(0, -1, 0)
+  // /
+  //            (_values_negative_level_set_side[index] - _values_positive_level_set_side[index]);
+
+  Real vel = 0.8102e-5 * _grad_values_positive_level_set_side[index] * _level_set_normal[index] /
+             (_values_positive_level_set_side[index] - 143.0);
+
+  return std::abs(vel);
 }

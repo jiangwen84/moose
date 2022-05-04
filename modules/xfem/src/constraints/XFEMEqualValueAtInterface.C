@@ -11,6 +11,7 @@
 #include "FEProblem.h"
 #include "GeometricCutUserObject.h"
 #include "XFEM.h"
+#include "AuxiliarySystem.h"
 
 registerMooseObject("XFEMApp", XFEMEqualValueAtInterface);
 
@@ -20,6 +21,9 @@ XFEMEqualValueAtInterface::validParams()
   InputParameters params = ElemElemConstraint::validParams();
   params.addRequiredParam<Real>("alpha", "Penalty parameter in penalty formulation.");
   params.addRequiredParam<Real>("value", "Prescribed value at the interface.");
+  params.addRequiredParam<Real>("value_neighbor", "Prescribed value at the interface.");
+  params.addRequiredParam<VariableName>(
+      "level_set_var", "The name of level set variable used to represent the interface");
   params.addParam<UserObjectName>(
       "geometric_cut_userobject",
       "Name of GeometricCutUserObject associated with this constraint.");
@@ -29,7 +33,18 @@ XFEMEqualValueAtInterface::validParams()
 }
 
 XFEMEqualValueAtInterface::XFEMEqualValueAtInterface(const InputParameters & parameters)
-  : ElemElemConstraint(parameters), _alpha(getParam<Real>("alpha")), _value(getParam<Real>("value"))
+  : ElemElemConstraint(parameters),
+    _alpha(getParam<Real>("alpha")),
+    _value(getParam<Real>("value")),
+    _value_neighbor(getParam<Real>("value_neighbor")),
+    _level_set_var_number(_subproblem
+                              .getVariable(_tid,
+                                           parameters.get<VariableName>("level_set_var"),
+                                           Moose::VarKindType::VAR_ANY,
+                                           Moose::VarFieldType::VAR_FIELD_STANDARD)
+                              .number()),
+    _system(_subproblem.getSystem(getParam<VariableName>("level_set_var"))),
+    _solution(*_system.current_local_solution.get())
 {
   _xfem = std::dynamic_pointer_cast<XFEM>(_fe_problem.getXFEM());
   if (_xfem == nullptr)
@@ -55,16 +70,35 @@ XFEMEqualValueAtInterface::reinitConstraintQuadrature(const ElementPairInfo & el
 Real
 XFEMEqualValueAtInterface::computeQpResidual(Moose::DGResidualType type)
 {
+  const Node * node = _current_elem->node_ptr(0);
+
+  dof_id_type ls_dof_id = node->dof_number(_system.number(), _level_set_var_number, 0);
+  Number ls_node_value = _solution(ls_dof_id);
+
+  Real use_positive_property = false;
+
+  if (_xfem->isPointInsidePhysicalDomain(_current_elem, *node))
+  {
+    if (ls_node_value >= 0.5)
+      use_positive_property = true;
+  }
+  else
+  {
+    if (ls_node_value < 0.5)
+      use_positive_property = true;
+  }
+
   Real r = 0;
 
   switch (type)
   {
     case Moose::Element:
-      r += _alpha * (_u[_qp] - _value) * _test[_i][_qp];
+      r += _alpha * (_u[_qp] - (use_positive_property ? _value : _value_neighbor)) * _test[_i][_qp];
       break;
 
     case Moose::Neighbor:
-      r += _alpha * (_u_neighbor[_qp] - _value) * _test_neighbor[_i][_qp];
+      r += _alpha * (_u_neighbor[_qp] - (use_positive_property ? _value_neighbor : _value)) *
+           _test_neighbor[_i][_qp];
       break;
   }
   return r;
@@ -73,6 +107,7 @@ XFEMEqualValueAtInterface::computeQpResidual(Moose::DGResidualType type)
 Real
 XFEMEqualValueAtInterface::computeQpJacobian(Moose::DGJacobianType type)
 {
+
   Real r = 0;
 
   switch (type)

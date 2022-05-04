@@ -35,6 +35,7 @@ QpPointValueAtXFEMInterface::QpPointValueAtXFEMInterface(const InputParameters &
   : GeneralUserObject(parameters),
     _mesh(_subproblem.mesh()),
     _var(&_subproblem.getVariable(_tid, parameters.get<VariableName>("variable"))),
+    _var_level_set(&_subproblem.getVariable(_tid, parameters.get<VariableName>("level_set_var"))),
     _level_set_var_number(
         _subproblem.getVariable(_tid, parameters.get<VariableName>("level_set_var")).number()),
     _system(_subproblem.getSystem(getParam<VariableName>("level_set_var"))),
@@ -67,6 +68,7 @@ QpPointValueAtXFEMInterface::execute()
   _values_negative_level_set_side.clear();
   _grad_values_positive_level_set_side.clear();
   _grad_values_negative_level_set_side.clear();
+  _level_set_normal.clear();
   _qp_points.clear();
 
   std::vector<Point> qp_points_vector;
@@ -101,7 +103,6 @@ QpPointValueAtXFEMInterface::execute()
   unsigned int i = 0;
   for (const auto & pt : _qp_points)
   {
-
     const Elem * elem = getElemContainingPoint(pt.second, /*positive_level_set = */ true);
 
     if (elem != nullptr)
@@ -112,6 +113,9 @@ QpPointValueAtXFEMInterface::execute()
       _values_positive_level_set_side[i] = (dynamic_cast<MooseVariable *>(_var))->sln()[0];
       _grad_values_positive_level_set_side[i] =
           ((dynamic_cast<MooseVariable *>(_var))->gradSln())[0];
+
+      _level_set_normal[i] = ((dynamic_cast<MooseVariable *>(_var_level_set))->gradSln())[0];
+      _level_set_normal[i] /= _level_set_normal[i].norm();
     }
 
     const Elem * elem2 = getElemContainingPoint(pt.second, false);
@@ -123,6 +127,9 @@ QpPointValueAtXFEMInterface::execute()
       _values_negative_level_set_side[i] = (dynamic_cast<MooseVariable *>(_var))->sln()[0];
       _grad_values_negative_level_set_side[i] =
           ((dynamic_cast<MooseVariable *>(_var))->gradSln())[0];
+
+      _level_set_normal[i] = ((dynamic_cast<MooseVariable *>(_var_level_set))->gradSln())[0];
+      _level_set_normal[i] /= _level_set_normal[i].norm();
     }
     i++;
   }
@@ -155,12 +162,12 @@ QpPointValueAtXFEMInterface::getElemContainingPoint(const Point & p, bool positi
 
   if (_xfem->isPointInsidePhysicalDomain(elem1, *node))
   {
-    if (ls_node_value > 0.0)
+    if (ls_node_value > 0.5)
       positive = true;
   }
   else
   {
-    if (ls_node_value < 0.0)
+    if (ls_node_value < 0.5)
       positive = false;
   }
 
