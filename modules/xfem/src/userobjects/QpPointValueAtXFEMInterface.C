@@ -142,6 +142,7 @@ QpPointValueAtXFEMInterface::finalize()
   _communicator.set_union(_grad_values_positive_level_set_side);
   _communicator.set_union(_values_negative_level_set_side);
   _communicator.set_union(_grad_values_negative_level_set_side);
+  _communicator.set_union(_level_set_normal);
 }
 
 const Elem *

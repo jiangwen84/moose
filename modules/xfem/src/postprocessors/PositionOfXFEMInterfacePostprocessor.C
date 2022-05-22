@@ -45,5 +45,17 @@ PositionOfXFEMInterfacePostprocessor::initialize()
 Real
 PositionOfXFEMInterfacePostprocessor::getValue()
 {
-  return _value_at_interface_uo->getQpPoint()[0](1);
+  std::map<unsigned int, Point> points = _value_at_interface_uo->getQpPoint();
+
+  Real min = 1e10;
+
+  for (const auto & item : points)
+  {
+    if ((item.second)(1) < min)
+      min = (item.second)(1);
+  }
+
+  return min;
+
+  // return _value_at_interface_uo->getQpPoint()[0](1);
 }

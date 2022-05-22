@@ -1,13 +1,15 @@
 [Mesh]
-  type = GeneratedMesh
-  dim = 2
-  xmin = 0
-  xmax = 0.06
-  ymin = 0.03
-  ymax = 0.06
-  nx = 101
-  ny = 51
-  elem_type = QUAD8
+  [gen]
+    type = GeneratedMeshGenerator
+    dim = 2
+    xmin = 0
+    xmax = 0.036
+    ymin = 0.018
+    ymax = 0.036
+    nx = 601
+    ny = 301
+    elem_type = QUAD4
+  []
 []
 
 [AuxVariables]
@@ -44,11 +46,23 @@
 
 [Functions]
   [phi_exact]
-    type = LevelSetOlssonBubble
+    type = LevelSetOlssonBubbles
     epsilon = 0.0005
-    center = '0.03 0.06 0'
-    radius = 0.0016 #0.0016
+    centers = '0.018 0.036 0
+               0.015 0.036 0
+               0.012 0.036 0
+               0.021 0.036 0
+               0.024 0.036 0'
+    radii = '0.0012 0.0012 0.0012 0.0012 0.0012'#0.0016
   []
+  # [phi_exact]
+  #   type = LevelSetOlssonBubbles
+  #   epsilon = 0.0003
+  #   centers = '0.018 0.036 0
+  #              0.012 0.036 0
+  #              0.024 0.036 0'
+  #   radii = '0.0016 0.0016 0.0016'#0.0016
+  # []
 []
 
 [ICs]
@@ -155,13 +169,13 @@
   # scheme = crank-nicolson
   petsc_options_iname = '-pc_type  -pc_factor_shift_type -pc_factor_shift_amount'
   petsc_options_value = 'lu      NONZERO               1e-10'
-  nl_rel_tol = 1e-10
-  nl_abs_tol = 1e-10
+  nl_rel_tol = 1e-8
+  nl_abs_tol = 1e-8
   nl_max_its = 15
   l_max_its = 15
   line_search = 'none'
-  dt = 2
-  end_time = 800
+  dt = 0.1
+  end_time = 250
   nl_forced_its = 3
 []
 
