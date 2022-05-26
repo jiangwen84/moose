@@ -1,3 +1,6 @@
+radius=0.000511
+radius1=0.0004
+
 [GlobalParams]
   order = FIRST
   family = LAGRANGE
@@ -5,60 +8,53 @@
 
 [Mesh]
   [gen]
-    type = GeneratedMeshGenerator
-    dim = 2
-    xmin = 0
-    xmax = 0.036
-    ymin = 0.018
-    ymax = 0.036
-    nx = 601
-    ny = 301
-    elem_type = QUAD4
+    type = FileMeshGenerator
+    file = pit_mesh.e
   []
   [add_bc1]
     type = SideSetsFromBoundingBoxGenerator
     input = gen
-    block_id = 0
+    block_id = 1
     boundary_id_old = top
     boundary_id_new = 10
-    bottom_left = '0.0109 0.035 0'
-    top_right = '0.0131 0.04 0'
+    bottom_left = '${fparse 0.012-radius1} 0.035 0'
+    top_right = '${fparse 0.012+radius1} 0.04 0'
   []
   [add_bc2]
     type = SideSetsFromBoundingBoxGenerator
     input = add_bc1
-    block_id = 0
+    block_id = 1
     boundary_id_old = top
     boundary_id_new = 11
-    bottom_left = '0.0139 0.035 0'
-    top_right = '0.0161 0.04 0'
+    bottom_left = '${fparse 0.015-radius1} 0.035 0'
+    top_right = '${fparse 0.015+radius1} 0.04 0'
   []
   [add_bc3]
     type = SideSetsFromBoundingBoxGenerator
     input = add_bc2
-    block_id = 0
+    block_id = 1
     boundary_id_old = top
     boundary_id_new = 12
-    bottom_left = '0.0169 0.035 0'
-    top_right = '0.0191 0.04 0'
+    bottom_left = '${fparse 0.018-radius1} 0.035 0'
+    top_right = '${fparse 0.018+radius1} 0.04 0'
   []
   [add_bc4]
     type = SideSetsFromBoundingBoxGenerator
     input = add_bc3
-    block_id = 0
+    block_id = 1
     boundary_id_old = top
     boundary_id_new = 13
-    bottom_left = '0.0199 0.035 0'
-    top_right = '0.0221 0.04 0'
+    bottom_left = '${fparse 0.021-radius1} 0.035 0'
+    top_right = '${fparse 0.021+radius1} 0.04 0'
   []
   [add_bc5]
     type = SideSetsFromBoundingBoxGenerator
     input = add_bc4
-    block_id = 0
+    block_id = 1
     boundary_id_old = top
     boundary_id_new = 14
-    bottom_left = '0.0229 0.035 0'
-    top_right = '0.0251 0.04 0'
+    bottom_left = '${fparse 0.024-radius1} 0.035 0'
+    top_right = '${fparse 0.024+radius1} 0.04 0'
   []
   # [add_bc1]
   #   type = SideSetsFromBoundingBoxGenerator
@@ -118,13 +114,13 @@
 [Functions]
   [phi_exact]
     type = LevelSetOlssonBubbles
-    epsilon = 0.0003
+    epsilon = 0.0002
     centers = '0.018 0.036 0
                0.015 0.036 0
                0.012 0.036 0
                0.021 0.036 0
                0.024 0.036 0'
-    radii = '0.0012 0.0012 0.0012 0.0012 0.0012'#0.0016
+    radii = '${radius} ${radius} ${radius} ${radius} ${radius}'#0.0016
   []
   # [phi_exact]
   #   type = LevelSetOlssonBubbles
@@ -279,9 +275,14 @@
   nl_abs_tol = 1e-10
 
   start_time = 0.0
-  dt = 1
+  dt = 0.1
   end_time = 25
   max_xfem_update = 1
+
+  [TimeStepper]
+    type = FunctionDT
+    function = 'if(t<2, 0.1, if(t<20, 1, 5))'
+  []
 
   nl_forced_its = 3
 []
@@ -292,7 +293,7 @@
   interval = 1
   execute_on = timestep_end
   exodus = true
-  file_base = five_pits
+  #file_base = five_pits
   [console]
     type = Console
     output_linear = true

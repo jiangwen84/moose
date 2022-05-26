@@ -1,14 +1,10 @@
+radius=0.000511
+radius1=0.0004
+
 [Mesh]
   [gen]
-    type = GeneratedMeshGenerator
-    dim = 2
-    xmin = 0
-    xmax = 0.036
-    ymin = 0.018
-    ymax = 0.036
-    nx = 601
-    ny = 301
-    elem_type = QUAD4
+    type = FileMeshGenerator
+    file = pit_mesh.e
   []
 []
 
@@ -47,13 +43,13 @@
 [Functions]
   [phi_exact]
     type = LevelSetOlssonBubbles
-    epsilon = 0.0005
+    epsilon = 0.0002
     centers = '0.018 0.036 0
                0.015 0.036 0
                0.012 0.036 0
                0.021 0.036 0
                0.024 0.036 0'
-    radii = '0.0012 0.0012 0.0012 0.0012 0.0012'#0.0016
+    radii = '${radius} ${radius} ${radius} ${radius} ${radius}'#0.0016
   []
   # [phi_exact]
   #   type = LevelSetOlssonBubbles
@@ -174,9 +170,13 @@
   nl_max_its = 15
   l_max_its = 15
   line_search = 'none'
-  dt = 1
+  dt = 0.1
   end_time = 250
   nl_forced_its = 3
+  [TimeStepper]
+    type = FunctionDT
+    function = 'if(t<2, 0.1, if(t<20, 1, 5))'
+  []
 []
 
 [Outputs]
