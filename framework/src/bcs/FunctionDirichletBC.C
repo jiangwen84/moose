@@ -33,3 +33,15 @@ FunctionDirichletBC::computeQpValue()
 {
   return _func.value(_t, *_current_node);
 }
+
+bool
+FunctionDirichletBC::shouldApply()
+{
+  Real x = (*_current_node)(0);
+  Real y = (*_current_node)(1);
+
+  if (std::sqrt(x * x + y * y) < 0.0025)
+    return true;
+  else
+    return false;
+}

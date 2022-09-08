@@ -22,6 +22,9 @@ XFEMEqualValueAtInterface::validParams()
   params.addRequiredParam<Real>("alpha", "Penalty parameter in penalty formulation.");
   params.addRequiredParam<Real>("value", "Prescribed value at the interface.");
   params.addRequiredParam<Real>("value_neighbor", "Prescribed value at the interface.");
+  params.addRequiredParam<bool>("use_penalty", "Use penalty approach.");
+  params.addParam<Real>(
+      "diff", 1., "The diffusion (or thermal conductivity or viscosity) coefficient.");
   params.addRequiredParam<VariableName>(
       "level_set_var", "The name of level set variable used to represent the interface");
   params.addParam<UserObjectName>(
@@ -44,7 +47,9 @@ XFEMEqualValueAtInterface::XFEMEqualValueAtInterface(const InputParameters & par
                                            Moose::VarFieldType::VAR_FIELD_STANDARD)
                               .number()),
     _system(_subproblem.getSystem(getParam<VariableName>("level_set_var"))),
-    _solution(*_system.current_local_solution.get())
+    _solution(*_system.current_local_solution.get()),
+    _use_penalty(getParam<bool>("use_penalty")),
+    _diff(getParam<Real>("diff"))
 {
   _xfem = std::dynamic_pointer_cast<XFEM>(_fe_problem.getXFEM());
   if (_xfem == nullptr)
@@ -64,18 +69,26 @@ XFEMEqualValueAtInterface::~XFEMEqualValueAtInterface() {}
 void
 XFEMEqualValueAtInterface::reinitConstraintQuadrature(const ElementPairInfo & element_pair_info)
 {
+  _interface_normal = element_pair_info._elem1_normal;
   ElemElemConstraint::reinitConstraintQuadrature(element_pair_info);
 }
 
 Real
 XFEMEqualValueAtInterface::computeQpResidual(Moose::DGResidualType type)
 {
+  Real area = _xfem->getCutPlaneArea(_current_elem);
+  Real elem_vol = _xfem->getPhysicalVolumeFraction(_current_elem) * _current_elem->volume();
+  Real neighbor_vol = _xfem->getPhysicalVolumeFraction(_neighbor_elem) * _neighbor_elem->volume();
+
   const Node * node = _current_elem->node_ptr(0);
 
   dof_id_type ls_dof_id = node->dof_number(_system.number(), _level_set_var_number, 0);
   Number ls_node_value = _solution(ls_dof_id);
 
   Real use_positive_property = false;
+
+  // std::cout << "area = " << area << ", elem_vol = " << elem_vol
+  //           << ", neighbor_vol =  " << neighbor_vol << std::endl;
 
   if (_xfem->isPointInsidePhysicalDomain(_current_elem, *node))
   {
@@ -90,15 +103,47 @@ XFEMEqualValueAtInterface::computeQpResidual(Moose::DGResidualType type)
 
   Real r = 0;
 
+  Real C_elem = std::sqrt(std::abs(_diff * area / elem_vol));
+  Real C_neigh = std::sqrt(std::abs(_diff * area / neighbor_vol));
+
+  C_elem = std::min(C_elem, 1e5);
+  C_neigh = std::min(C_neigh, 1e5);
+
+  // C_elem = 1.0;
+  // C_neigh = 1.0;
+
+  // std::cout << "_u[_qp] = " << _u[_qp] << ", _u_neighbor[_qp] = " << _u_neighbor[_qp]
+  //           << ", area = " << area << std::endl;
+
   switch (type)
   {
     case Moose::Element:
-      r += _alpha * (_u[_qp] - (use_positive_property ? _value : _value_neighbor)) * _test[_i][_qp];
+
+      if (!_use_penalty)
+      {
+        r += -_test[_i][_qp] * (_grad_u[_qp] * _diff * _interface_normal) +
+             (_u[_qp] - (use_positive_property ? _value : _value_neighbor)) *
+                 (_grad_test[_i][_qp] * _diff * _interface_normal);
+        r += _alpha * (_u[_qp] - (use_positive_property ? _value : _value_neighbor)) *
+             _test[_i][_qp] * C_elem;
+      }
+      else
+        r += _alpha * (_u[_qp] - (use_positive_property ? _value : _value_neighbor)) *
+             _test[_i][_qp] * C_elem;
       break;
 
     case Moose::Neighbor:
-      r += _alpha * (_u_neighbor[_qp] - (use_positive_property ? _value_neighbor : _value)) *
-           _test_neighbor[_i][_qp];
+      if (!_use_penalty)
+      {
+        r += -_test_neighbor[_i][_qp] * (_grad_u_neighbor[_qp] * _diff * -_interface_normal) +
+             (_u_neighbor[_qp] - (use_positive_property ? _value_neighbor : _value)) *
+                 (_grad_test_neighbor[_i][_qp] * _diff * -_interface_normal);
+        r += _alpha * (_u_neighbor[_qp] - (use_positive_property ? _value_neighbor : _value)) *
+             _test_neighbor[_i][_qp] * C_neigh;
+      }
+      else
+        r += _alpha * (_u_neighbor[_qp] - (use_positive_property ? _value_neighbor : _value)) *
+             _test_neighbor[_i][_qp] * C_neigh;
       break;
   }
   return r;
@@ -107,17 +152,41 @@ XFEMEqualValueAtInterface::computeQpResidual(Moose::DGResidualType type)
 Real
 XFEMEqualValueAtInterface::computeQpJacobian(Moose::DGJacobianType type)
 {
+  Real area = _xfem->getCutPlaneArea(_current_elem);
+  Real elem_vol = _xfem->getPhysicalVolumeFraction(_current_elem) * _current_elem->volume();
+  Real neighbor_vol = _xfem->getPhysicalVolumeFraction(_neighbor_elem) * _neighbor_elem->volume();
 
   Real r = 0;
+
+  Real C_elem = std::sqrt(std::abs(_diff * area / elem_vol));
+  Real C_neigh = std::sqrt(std::abs(_diff * area / neighbor_vol));
+  C_elem = std::min(C_elem, 1e5);
+  C_neigh = std::min(C_neigh, 1e5);
+  // C_elem = 1.0;
+  // C_neigh = 1.0;
 
   switch (type)
   {
     case Moose::ElementElement:
-      r += _alpha * _phi[_j][_qp] * _test[_i][_qp];
+      if (!_use_penalty)
+      {
+        r += -_test[_i][_qp] * (_grad_phi[_j][_qp] * _diff * _interface_normal) +
+             _phi[_j][_qp] * (_grad_test[_i][_qp] * _diff * _interface_normal);
+        r += _alpha * _phi[_j][_qp] * _test[_i][_qp] * C_elem;
+      }
+      else
+        r += _alpha * _phi[_j][_qp] * _test[_i][_qp] * C_elem;
       break;
 
     case Moose::NeighborNeighbor:
-      r += _alpha * _phi_neighbor[_j][_qp] * _test_neighbor[_i][_qp];
+      if (!_use_penalty)
+      {
+        r += -_test_neighbor[_i][_qp] * (_grad_phi_neighbor[_j][_qp] * _diff * -_interface_normal) +
+             _phi_neighbor[_j][_qp] * (_grad_test_neighbor[_i][_qp] * _diff * -_interface_normal);
+        r += _alpha * _phi_neighbor[_j][_qp] * _test_neighbor[_i][_qp] * C_neigh;
+      }
+      else
+        r += _alpha * _phi_neighbor[_j][_qp] * _test_neighbor[_i][_qp] * C_neigh;
       break;
 
     default:

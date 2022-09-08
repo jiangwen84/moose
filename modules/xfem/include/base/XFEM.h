@@ -181,6 +181,8 @@ public:
    */
   Real getPhysicalVolumeFraction(const Elem * elem) const;
 
+  Real getCutPlaneArea(const Elem * elem) const;
+
   /**
    * Return true if the point is inside the element physical domain
    * Note: if this element is not cut, return true too
@@ -351,6 +353,9 @@ private:
 
   /// Data structure for storing the GeommetricCutUserObjects and their corresponding id
   std::map<const GeometricCutUserObject *, unsigned int> _geom_marker_id_map;
+
+  std::set<unsigned int> _saved_new_nodes;
+  std::set<unsigned int> _saved_old_nodes;
 
   ElementFragmentAlgorithm _efa_mesh;
 

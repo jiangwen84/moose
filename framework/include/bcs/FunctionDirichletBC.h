@@ -27,6 +27,8 @@ public:
 protected:
   virtual Real computeQpValue() override;
 
+  virtual bool shouldApply() override;
+
   /// The function being used for evaluation
   const Function & _func;
 };

@@ -1,10 +1,7 @@
-radius=0.000511
-radius1=0.0004
-
 [Mesh]
   [gen]
     type = FileMeshGenerator
-    file = pit_mesh.e
+    file = iso_3d.e
   []
 []
 
@@ -42,23 +39,11 @@ radius1=0.0004
 
 [Functions]
   [phi_exact]
-    type = LevelSetOlssonBubbles
-    epsilon = 0.0002
-    centers = '0.018 0.036 0
-               0.015 0.036 0
-               0.012 0.036 0
-               0.021 0.036 0
-               0.024 0.036 0'
-    radii = '${radius} ${radius} ${radius} ${radius} ${radius}'#0.0016
+    type = LevelSetOlssonBubble
+    epsilon = 0.002
+    center = '0.0 0.0 0.01'
+    radius = 0.0041 #0.0016
   []
-  # [phi_exact]
-  #   type = LevelSetOlssonBubbles
-  #   epsilon = 0.0003
-  #   centers = '0.018 0.036 0
-  #              0.012 0.036 0
-  #              0.024 0.036 0'
-  #   radii = '0.0016 0.0016 0.0016'#0.0016
-  # []
 []
 
 [ICs]
@@ -162,21 +147,17 @@ radius1=0.0004
   solve_type = NEWTON
   start_time = 0
   #end_time = 1.570796
-  # scheme = crank-nicolson
+  #scheme = crank-nicolson
   petsc_options_iname = '-pc_type  -pc_factor_shift_type -pc_factor_shift_amount'
   petsc_options_value = 'lu      NONZERO               1e-10'
-  nl_rel_tol = 1e-8
-  nl_abs_tol = 1e-8
+  nl_rel_tol = 1e-9
+  nl_abs_tol = 1e-9
   nl_max_its = 15
   l_max_its = 15
   line_search = 'none'
-  dt = 0.1
-  end_time = 250
+  dt = 1
+  end_time = 800
   nl_forced_its = 3
-  [TimeStepper]
-    type = FunctionDT
-    function = 'if(t<2, 0.2, if(t<20, 1, 5))'
-  []
 []
 
 [Outputs]

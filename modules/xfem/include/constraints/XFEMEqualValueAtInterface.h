@@ -29,6 +29,9 @@ protected:
 
   virtual Real computeQpJacobian(Moose::DGJacobianType type) override;
 
+  /// Vector normal to the internal interface
+  Point _interface_normal;
+
   // Penalty parameter in penalty formulation
   Real _alpha;
 
@@ -48,4 +51,8 @@ protected:
 
   /// the subproblem solution vector
   const NumericVector<Number> & _solution;
+
+  const bool _use_penalty;
+
+  const Real & _diff;
 };
