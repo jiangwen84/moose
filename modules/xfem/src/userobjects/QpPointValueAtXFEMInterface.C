@@ -114,6 +114,10 @@ QpPointValueAtXFEMInterface::execute()
       _grad_values_positive_level_set_side[i] =
           ((dynamic_cast<MooseVariable *>(_var))->gradSln())[0];
 
+      std::cout << "ptr = " << (dynamic_cast<MooseVariable *>(_var_level_set) == nullptr)
+                << std::endl;
+      std::cout << "value = " << ((dynamic_cast<MooseVariable *>(_var_level_set))->gradSln())[0]
+                << std::endl;
       _level_set_normal[i] = ((dynamic_cast<MooseVariable *>(_var_level_set))->gradSln())[0];
       _level_set_normal[i] /= _level_set_normal[i].norm();
     }

@@ -77,7 +77,7 @@
     alpha = 10 #0.006
     level_set_var = phi
     diff = 1
-    use_penalty = true
+    use_penalty = false
   []
   # [u_constraint]
   #   type = XFEMSingleVariableConstraint
@@ -153,7 +153,7 @@
   interval = 1
   execute_on = timestep_end
   exodus = true
-  file_base = nitsche_pen
+  file_base = nitsche
   [console]
     type = Console
     output_linear = true

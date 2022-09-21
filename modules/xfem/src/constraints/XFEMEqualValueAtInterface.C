@@ -80,34 +80,86 @@ XFEMEqualValueAtInterface::computeQpResidual(Moose::DGResidualType type)
   Real elem_vol = _xfem->getPhysicalVolumeFraction(_current_elem) * _current_elem->volume();
   Real neighbor_vol = _xfem->getPhysicalVolumeFraction(_neighbor_elem) * _neighbor_elem->volume();
 
-  const Node * node = _current_elem->node_ptr(0);
+  unsigned int count_pos = 0;
+  unsigned int count_neg = 0;
 
-  dof_id_type ls_dof_id = node->dof_number(_system.number(), _level_set_var_number, 0);
-  Number ls_node_value = _solution(ls_dof_id);
+  const std::set<unsigned int> new_nodes = _xfem->getNewNodes();
+
+  std::set<unsigned int>::const_iterator it;
+
+  for (auto neighbor : _current_elem->neighbor_ptr_range())
+  {
+    if (neighbor != nullptr)
+      for (unsigned int i = 0; i < neighbor->n_nodes(); i++)
+      {
+        const Node * node = neighbor->node_ptr(i);
+        if (new_nodes.find(node->id()) == new_nodes.end())
+        {
+          // std::cout << "node id = " << node->id() << std::endl;
+          dof_id_type ls_dof_id = node->dof_number(_system.number(), _level_set_var_number, 0);
+          Number ls_node_value = _solution(ls_dof_id);
+          if (ls_node_value >= 0.5)
+            count_pos += 1;
+          else
+            count_neg += 1;
+        }
+      }
+  }
+
+  // for (unsigned int i = 0; i < _current_elem->n_nodes(); i++)
+  // {
+  //   const Node * node = _current_elem->node_ptr(i);
+  //
+  //   dof_id_type ls_dof_id = node->dof_number(_system.number(), _level_set_var_number, 0);
+  //   Number ls_node_value = _solution(ls_dof_id);
+  //
+  //   if (_xfem->isPointInsidePhysicalDomain(_current_elem, *node))
+  //   {
+  //     if (ls_node_value >= 0.5)
+  //       count_pos += 1;
+  //   }
+  //   else
+  //   {
+  //     if (ls_node_value < 0.5)
+  //       count_pos += 1;
+  //   }
+  // }
 
   Real use_positive_property = false;
 
   // std::cout << "area = " << area << ", elem_vol = " << elem_vol
   //           << ", neighbor_vol =  " << neighbor_vol << std::endl;
 
-  if (_xfem->isPointInsidePhysicalDomain(_current_elem, *node))
-  {
-    if (ls_node_value >= 0.5)
-      use_positive_property = true;
-  }
-  else
-  {
-    if (ls_node_value < 0.5)
-      use_positive_property = true;
-  }
+  // std::cout << "count_pos = " << count_pos << std::endl;
+
+  // if (count_pos / _current_elem->n_nodes() > 0.8)
+  //   use_positive_property = true;
+
+  if (count_pos > count_neg)
+    use_positive_property = true;
+
+  // const Node * node = _current_elem->node_ptr(0);
+  // dof_id_type ls_dof_id = node->dof_number(_system.number(), _level_set_var_number, 0);
+  // Number ls_node_value = _solution(ls_dof_id);
+
+  // if (_xfem->isPointInsidePhysicalDomain(_current_elem, *node))
+  // {
+  //   if (ls_node_value >= 0.5)
+  //     use_positive_property = true;
+  // }
+  // else
+  // {
+  //   if (ls_node_value < 0.5)
+  //     use_positive_property = true;
+  // }
 
   Real r = 0;
 
   Real C_elem = std::sqrt(std::abs(_diff * area / elem_vol));
   Real C_neigh = std::sqrt(std::abs(_diff * area / neighbor_vol));
 
-  C_elem = std::min(C_elem, 1e5);
-  C_neigh = std::min(C_neigh, 1e5);
+  // C_elem = std::min(C_elem, 1e5);
+  // C_neigh = std::min(C_neigh, 1e5);
 
   // C_elem = 1.0;
   // C_neigh = 1.0;
@@ -160,8 +212,8 @@ XFEMEqualValueAtInterface::computeQpJacobian(Moose::DGJacobianType type)
 
   Real C_elem = std::sqrt(std::abs(_diff * area / elem_vol));
   Real C_neigh = std::sqrt(std::abs(_diff * area / neighbor_vol));
-  C_elem = std::min(C_elem, 1e5);
-  C_neigh = std::min(C_neigh, 1e5);
+  // C_elem = std::min(C_elem, 1e5);
+  // C_neigh = std::min(C_neigh, 1e5);
   // C_elem = 1.0;
   // C_neigh = 1.0;
 

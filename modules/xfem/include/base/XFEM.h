@@ -111,6 +111,8 @@ public:
 
   ~XFEM();
 
+  std::set<unsigned int> getNewNodes() const { return _saved_new_nodes; };
+
   void addGeometricCut(GeometricCutUserObject * geometric_cut);
 
   void addStateMarkedElem(unsigned int elem_id, RealVectorValue & normal);

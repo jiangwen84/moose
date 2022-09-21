@@ -14,9 +14,9 @@
     ymax = 0.03
     zmin = -0.02
     zmax = 0.015
-    nx = 15
-    ny = 15
-    nz = 15
+    nx = 4
+    ny = 4
+    nz = 4
     elem_type = HEX8
   []
   use_displaced_mesh = false
@@ -46,7 +46,21 @@
   [line_seg_cut_uo]
     type = LevelSetCutUserObject
     level_set_var = phi
-    heal_always = true
+    heal_always = false
+  []
+[]
+
+[Kernels]
+  [diff]
+    type = CoefDiffusion
+    variable = u
+    coef = 0.8102e-5
+  []
+[]
+
+[Variables]
+  [u]
+    initial_condition = 0
   []
 []
 
@@ -55,7 +69,8 @@
     type = LevelSetOlssonBubble
     epsilon = 0.002
     center = '0.0 0.0 0.015'
-    radius =0.010902 #0.0211 #0.0107  # 0.0107 #0.010902
+    #radius = 0.0101 #0.0202 #0.0211
+    radius = 0.02002
   []
 []
 
@@ -92,6 +107,12 @@
 []
 
 [BCs]
+  [top]
+    type = DirichletBC
+    variable = u
+    boundary = top
+    value = 1
+  []
   [top_x]
     type = DirichletBC
     boundary = front #10 #front
@@ -140,6 +161,28 @@
 #   []
 # []
 
+[Constraints]
+  [u_constraint]
+    type = XFEMEqualValueAtInterface
+    geometric_cut_userobject = 'line_seg_cut_uo'
+    use_displaced_mesh = false
+    variable = u
+    value = 5.1
+    value_neighbor = 0.5
+    alpha = 1
+    level_set_var = phi
+    diff = 0.8102e-5
+    use_penalty = false
+  []
+  # [u_constraint]
+  #   type = XFEMSingleVariableConstraint
+  #   geometric_cut_userobject = 'line_seg_cut_uo'
+  #   use_penalty = true
+  #   alpha = 1e6
+  #   variable = u
+  # []
+[]
+
 [Executioner]
   type = Transient
   solve_type = 'NEWTON'
@@ -153,8 +196,8 @@
 
   l_tol = 1e-3
   nl_max_its = 15
-  nl_rel_tol = 1e-10
-  nl_abs_tol = 1e-10
+  nl_rel_tol = 1e-6
+  nl_abs_tol = 1e-6
 
   start_time = 0.0
   dt = 1

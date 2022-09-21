@@ -204,7 +204,7 @@
   interval = 1
   execute_on = timestep_end
   exodus = true
-  file_base = isolated_pit_3d_tet_2
+  file_base = isolated_pit_3d_hex
   [console]
     type = Console
     output_linear = true

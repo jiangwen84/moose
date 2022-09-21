@@ -13,9 +13,9 @@
     ymax = 0.03
     zmin = -0.02
     zmax = 0.015
-    nx = 5
-    ny = 5
-    nz = 5
+    nx = 9
+    ny = 9
+    nz = 9
     elem_type = HEX8
   []
 []
@@ -27,23 +27,10 @@
 []
 
 [UserObjects]
-  # [line_seg_cut_uo]
-  #   type = LineSegmentCutUserObject
-  #   cut_data = '0 0 0 1'
-  #   time_start_cut = 0.0
-  #   time_end_cut = 0.0
-  # []
   [line_seg_cut_uo]
     type = LevelSetCutUserObject
     level_set_var = phi
     heal_always = true
-  []
-  [value_uo]
-    type = QpPointValueAtXFEMInterface
-    variable = 'u'
-    interface_mesh_cut_userobject = 'line_seg_cut_uo'
-    execute_on = TIMESTEP_END
-    level_set_var = phi
   []
 []
 
@@ -53,7 +40,7 @@
     epsilon = 0.002
     center = '0.0 0.0 0.015'
     #radius = 0.0101 #0.0202 #0.0211
-    radius = 0.010501
+    radius = 0.02002
   []
 []
 
@@ -73,6 +60,8 @@
 
 [AuxVariables]
   [phi]
+    order = FIRST
+    family = LAGRANGE
   []
   [ls_vel]
     order = FIRST
@@ -81,23 +70,25 @@
 []
 
 [Constraints]
-  # [u_constraint]
-  #   type = XFEMEqualValueAtInterface
-  #   geometric_cut_userobject = 'line_seg_cut_uo'
-  #   use_displaced_mesh = false
-  #   variable = u
-  #   value = 5.1
-  #   value_neighbor = 0
-  #   alpha = 1e6
-  #   level_set_var = phi
-  # []
   [u_constraint]
-    type = XFEMSingleVariableConstraint
+    type = XFEMEqualValueAtInterface
     geometric_cut_userobject = 'line_seg_cut_uo'
-    use_penalty = true
-    alpha = 1e6
+    use_displaced_mesh = false
     variable = u
+    value = 5.1
+    value_neighbor = 4
+    alpha = 1
+    level_set_var = phi
+    diff = 0.8102e-5
+    use_penalty = false
   []
+  # [u_constraint]
+  #   type = XFEMSingleVariableConstraint
+  #   geometric_cut_userobject = 'line_seg_cut_uo'
+  #   use_penalty = true
+  #   alpha = 1e6
+  #   variable = u
+  # []
 []
 
 [Functions]
@@ -118,19 +109,19 @@
 
 [BCs]
   # Define boundary conditions
-  # [top]
-  #   type = DirichletBC
-  #   variable = u
-  #   boundary = top
-  #   value = 0
-  # []
-
-  [bottom]
+  [top]
     type = DirichletBC
     variable = u
-    boundary = bottom
-    value = 0
+    boundary = top
+    value = 1
   []
+
+  # [bottom]
+  #   type = DirichletBC
+  #   variable = u
+  #   boundary = bottom
+  #   value = 0
+  # []
 []
 
 [AuxKernels]
@@ -139,13 +130,6 @@
     function = phi_exact
     variable = phi
     execute_on = 'TIMESTEP_BEGIN'
-  []
-[]
-
-[Postprocessors]
-  [interface_location]
-    type = PositionOfXFEMInterfacePostprocessor
-    value_at_interface_uo = value_uo
   []
 []
 
@@ -167,7 +151,7 @@
 
   start_time = 0.0
   dt = 1
-  end_time = 3
+  end_time = 1
   max_xfem_update = 1
 
   nl_forced_its = 3

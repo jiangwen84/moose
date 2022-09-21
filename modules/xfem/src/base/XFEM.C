@@ -1023,6 +1023,8 @@ XFEM::healMesh()
               std::cout << "find2 = " << find2 << ", find = " << find << std::endl;
               std::cout << "e1node->id() = " << e1node->id() << ", e2node->id() = " << e2node->id()
                         << std::endl;
+              std::cout << "elem1 = " << *elem1 << std::endl;
+              std::cout << "elem1 = " << *elem2 << std::endl;
             }
 
             // if (e1node->id() != 429)
