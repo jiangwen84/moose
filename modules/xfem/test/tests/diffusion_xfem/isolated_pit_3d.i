@@ -32,7 +32,7 @@
     variable = 'u'
     interface_mesh_cut_userobject = 'line_seg_cut_uo'
     execute_on = TIMESTEP_END
-    level_set_var = phi
+    level_set_var = 'phi'
   []
 []
 
@@ -197,7 +197,6 @@
 
   nl_forced_its = 3
 []
-
 
 [Outputs]
   csv = true

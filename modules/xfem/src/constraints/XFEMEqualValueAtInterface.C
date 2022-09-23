@@ -32,10 +32,6 @@ XFEMEqualValueAtInterface::validParams()
       "Name of GeometricCutUserObject associated with this constraint.");
   params.addClassDescription("Enforce that the solution have the same value on opposing sides of "
                              "an XFEM interface.");
-  params.addRelationshipManager("ElementSideNeighborLayers",
-                                Moose::RelationshipManagerType::ALGEBRAIC,
-                                [](const InputParameters &, InputParameters & rm_params)
-                                { rm_params.set<unsigned short>("layers") = 2; });
   return params;
 }
 

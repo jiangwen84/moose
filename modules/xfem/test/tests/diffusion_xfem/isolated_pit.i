@@ -92,8 +92,10 @@
     variable = u
     value = 5.1
     value_neighbor = 0
-    alpha = 1e6
+    alpha = 0
     level_set_var = phi
+    use_penalty = false
+    diff = 0.8102e-5
   []
 []
 
@@ -202,7 +204,6 @@
 
   nl_forced_its = 3
 []
-
 
 [Outputs]
   csv = true

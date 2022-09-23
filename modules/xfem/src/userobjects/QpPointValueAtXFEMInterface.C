@@ -84,7 +84,6 @@ QpPointValueAtXFEMInterface::execute()
     std::vector<Real> weights1;
 
     unsigned int plane_id = 0; // Only support one cut plane for the time being
-
     _xfem->getXFEMIntersectionInfo(elem1, plane_id, normal1, intersectionPoints1, false);
 
     if (intersectionPoints1.size() == 2)
@@ -116,8 +115,12 @@ QpPointValueAtXFEMInterface::execute()
 
       std::cout << "ptr = " << (dynamic_cast<MooseVariable *>(_var_level_set) == nullptr)
                 << std::endl;
-      std::cout << "value = " << ((dynamic_cast<MooseVariable *>(_var_level_set))->gradSln())[0]
+
+      std::cout << "value = " << ((dynamic_cast<MooseVariable *>(_var_level_set))->sln())[0]
                 << std::endl;
+      std::cout << "value2 = " << ((dynamic_cast<MooseVariable *>(_var_level_set))->gradSln())[0]
+                << std::endl;
+
       _level_set_normal[i] = ((dynamic_cast<MooseVariable *>(_var_level_set))->gradSln())[0];
       _level_set_normal[i] /= _level_set_normal[i].norm();
     }
