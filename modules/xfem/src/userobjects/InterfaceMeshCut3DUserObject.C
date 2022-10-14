@@ -123,6 +123,8 @@ bool
 InterfaceMeshCut3DUserObject::cutElementByGeometry(const Elem * elem,
                                                    std::vector<Xfem::CutFace> & cut_faces) const
 {
+  return false;
+
   mooseAssert(elem->dim() == 3, "Dimension of element to be cut must be 3");
 
   bool elem_cut = false;
@@ -209,6 +211,11 @@ InterfaceMeshCut3DUserObject::cutFragmentByGeometry(
 Real
 InterfaceMeshCut3DUserObject::calculateSignedDistance(Point p) const
 {
+  // bool print = false;
+  // Point pp(0.0909091, -1, 0.0909091);
+  // if ((pp - p).norm() < 1e-6)
+  //   print = true;
+
   std::vector<Real> distance;
   Real min_dist = std::numeric_limits<Real>::max();
   for (const auto & cut_elem : _cutter_mesh->element_ptr_range())
@@ -220,20 +227,36 @@ InterfaceMeshCut3DUserObject::calculateSignedDistance(Point p) const
     Real dist = Xfem::pointTriangleDistance(
         p, cut_elem->node_ref(0), cut_elem->node_ref(1), cut_elem->node_ref(2), xp, region);
 
+    // if (print)
+    // {
+    //   std::cout << "elem p1 = " << cut_elem->node_ref(0) << ", p2 = " << cut_elem->node_ref(1)
+    //             << ", p3 = " << cut_elem->node_ref(2) << std::endl;
+    //   std::cout << "dist = " << dist << ", xp = " << xp << ", region = " << region << std::endl;
+    // }
+
     distance.push_back(std::abs(dist));
 
     if (dist < std::abs(min_dist))
     {
       min_dist = dist;
-      Point normal = (_pseudo_normal.find(cut_elem->id())->second)[region];
-      if (normal * (p - xp) < 0.0)
-        min_dist *= -1.0;
+      if (region == 0)
+      {
+        Point normal = (_pseudo_normal.find(cut_elem->id())->second)[region];
+        if (normal * (p - xp) < 0.0)
+          min_dist *= -1.0;
+      }
+      // WJ
+      min_dist = std::abs(dist);
     }
   }
   std::sort(distance.begin(), distance.end());
   Real sum_dist = 0.0;
   for (std::vector<Real>::iterator it = distance.begin(); it != distance.begin() + 1; ++it)
     sum_dist += *it;
+
+  // if (print)
+  //   for (std::vector<Real>::iterator it = distance.begin(); it != distance.begin() + 1; ++it)
+  //     std::cout << "dist " << *it << std::endl;
 
   if (min_dist < 0.0)
     return -sum_dist / 1.0;

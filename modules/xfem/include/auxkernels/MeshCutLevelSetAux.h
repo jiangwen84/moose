@@ -28,4 +28,6 @@ protected:
 
   /// Pointer to the InterfaceMeshCutUserObject object
   const InterfaceMeshCutUserObjectBase * _mesh_cut_uo;
+
+  const Real _l;
 };

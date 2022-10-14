@@ -21,10 +21,12 @@ MeshCutLevelSetAux::validParams()
   params.addParam<UserObjectName>(
       "mesh_cut_user_object",
       "Name of InterfaceMeshCutUserObject that gives cut mesh information.");
+  params.addParam<Real>("l", 1.0, "l");
   return params;
 }
 
-MeshCutLevelSetAux::MeshCutLevelSetAux(const InputParameters & parameters) : AuxKernel(parameters)
+MeshCutLevelSetAux::MeshCutLevelSetAux(const InputParameters & parameters)
+  : AuxKernel(parameters), _l(getParam<Real>("l"))
 {
   if (!isNodal())
     mooseError("MeshCutLevelSetAux: Aux variable must be nodal variable.");
@@ -43,5 +45,5 @@ MeshCutLevelSetAux::MeshCutLevelSetAux(const InputParameters & parameters) : Aux
 Real
 MeshCutLevelSetAux::computeValue()
 {
-  return _mesh_cut_uo->calculateSignedDistance(*_current_node);
+  return std::exp(-std::abs(_mesh_cut_uo->calculateSignedDistance(*_current_node)) / _l);
 }
