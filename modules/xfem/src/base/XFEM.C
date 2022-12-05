@@ -2414,6 +2414,7 @@ XFEM::getCutSubdomainID(const GeometricCutUserObject * gcuo,
   // CutSubdomainID.
   const Node * node = pickFirstPhysicalNode(cut_elem, parent_elem);
   return gcuo->getCutSubdomainID(node);
+  return 0;
 }
 
 const Node *

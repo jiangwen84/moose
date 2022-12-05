@@ -32,6 +32,13 @@
     level_set_var = phi
     heal_always = true
   []
+  [value_uo]
+    type = QpPointValueAtXFEMInterface
+    variable = 'u'
+    interface_mesh_cut_userobject = 'line_seg_cut_uo'
+    execute_on = TIMESTEP_END
+    level_set_var = 'phi'
+  []
 []
 
 [Functions]
@@ -67,6 +74,10 @@
     order = FIRST
     family = LAGRANGE
   []
+  # [ls_0]
+  #   order = CONSTANT
+  #   family = MONOMIAL
+  # []
 []
 
 [Constraints]
@@ -82,13 +93,6 @@
     diff = 0.8102e-5
     use_penalty = false
   []
-  # [u_constraint]
-  #   type = XFEMSingleVariableConstraint
-  #   geometric_cut_userobject = 'line_seg_cut_uo'
-  #   use_penalty = true
-  #   alpha = 1e6
-  #   variable = u
-  # []
 []
 
 [Functions]
@@ -131,6 +135,12 @@
     variable = phi
     execute_on = 'TIMESTEP_BEGIN'
   []
+  # [component]
+  #   type = VariableGradientComponent
+  #   component = x
+  #   gradient_variable = phi
+  #   variable = ls_0
+  # []
 []
 
 [Executioner]

@@ -41,6 +41,7 @@ QpPointValueAtXFEMInterface::QpPointValueAtXFEMInterface(const InputParameters &
     _system(_subproblem.getSystem(getParam<VariableName>("level_set_var"))),
     _solution(*_system.current_local_solution.get())
 {
+  const VariableGradient & dummy = (dynamic_cast<MooseVariable *>(_var_level_set))->gradSln();
 }
 
 void
@@ -113,13 +114,19 @@ QpPointValueAtXFEMInterface::execute()
       _grad_values_positive_level_set_side[i] =
           ((dynamic_cast<MooseVariable *>(_var))->gradSln())[0];
 
-      std::cout << "ptr = " << (dynamic_cast<MooseVariable *>(_var_level_set) == nullptr)
-                << std::endl;
+      // std::cout << "ptr = " << (dynamic_cast<MooseVariable *>(_var_level_set) == nullptr)
+      //           << std::endl;
 
-      std::cout << "value = " << ((dynamic_cast<MooseVariable *>(_var_level_set))->sln())[0]
-                << std::endl;
-      std::cout << "value2 = " << ((dynamic_cast<MooseVariable *>(_var_level_set))->gradSln())[0]
-                << std::endl;
+      //(dynamic_cast<MooseVariable *>(_var_level_set))->reinitAux();
+
+      // std::cout << "var name = " << _var_level_set->name() << ", num = " << _level_set_var_number
+      //           << std::endl;
+      // std::cout << "u name = " << _var->name() << ", num = " << _var->number() << std::endl;
+
+      // std::cout << "value = " << ((dynamic_cast<MooseVariable *>(_var_level_set))->sln())[0]
+      //           << std::endl;
+      // std::cout << "value2 = " << ((dynamic_cast<MooseVariable *>(_var_level_set))->gradSln())[0]
+      //           << std::endl;
 
       _level_set_normal[i] = ((dynamic_cast<MooseVariable *>(_var_level_set))->gradSln())[0];
       _level_set_normal[i] /= _level_set_normal[i].norm();

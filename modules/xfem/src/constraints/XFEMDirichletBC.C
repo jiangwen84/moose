@@ -7,16 +7,16 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "XFEMEqualValueAtInterface.h"
+#include "XFEMDirichletBC.h"
 #include "FEProblem.h"
 #include "GeometricCutUserObject.h"
 #include "XFEM.h"
 #include "AuxiliarySystem.h"
 
-registerMooseObject("XFEMApp", XFEMEqualValueAtInterface);
+registerMooseObject("XFEMApp", XFEMDirichletBC);
 
 InputParameters
-XFEMEqualValueAtInterface::validParams()
+XFEMDirichletBC::validParams()
 {
   InputParameters params = ElemElemConstraint::validParams();
   params.addRequiredParam<Real>("alpha", "Penalty parameter in penalty formulation.");
@@ -39,7 +39,7 @@ XFEMEqualValueAtInterface::validParams()
   return params;
 }
 
-XFEMEqualValueAtInterface::XFEMEqualValueAtInterface(const InputParameters & parameters)
+XFEMDirichletBC::XFEMDirichletBC(const InputParameters & parameters)
   : ElemElemConstraint(parameters),
     _alpha(getParam<Real>("alpha")),
     _value(getParam<Real>("value")),
@@ -53,36 +53,44 @@ XFEMEqualValueAtInterface::XFEMEqualValueAtInterface(const InputParameters & par
     _system(_subproblem.getSystem(getParam<VariableName>("level_set_var"))),
     _solution(*_system.current_local_solution.get()),
     _use_penalty(getParam<bool>("use_penalty")),
-    _diff(getParam<Real>("diff"))
+    _diff(getParam<Real>("diff")),
+    _temp_bc({0.111607143, 1.97172619,  4.166666667, 7.068452381, 12.46279762,
+              16.33184524, 20.20089286, 23.02827381, 26.07886905, 29.42708333,
+              32.32886905, 34.30059524, 36.45833333, 38.4672619,  39.69494048,
+              41.07142857, 42.187,      44.08482143, 46.39136905, 48.13988095},
+             {840.15, 866.15, 893.15, 920.15, 973.15, 973.15, 973.15, 973.15, 973.15, 920.15,
+              893.15, 866.15, 840.15, 786.15, 760.15, 733.15, 706.15, 680.15, 653.15, 626.15})
 {
   _xfem = std::dynamic_pointer_cast<XFEM>(_fe_problem.getXFEM());
   if (_xfem == nullptr)
-    mooseError("Problem casting to XFEM in XFEMEqualValueAtInterface");
+    mooseError("Problem casting to XFEM in XFEMDirichletBC");
 
   const UserObject * uo =
       &(_fe_problem.getUserObjectBase(getParam<UserObjectName>("geometric_cut_userobject")));
 
   if (dynamic_cast<const GeometricCutUserObject *>(uo) == nullptr)
-    mooseError("UserObject casting to GeometricCutUserObject in XFEMEqualValueAtInterface");
+    mooseError("UserObject casting to GeometricCutUserObject in XFEMDirichletBC");
 
   _interface_id = _xfem->getGeometricCutID(dynamic_cast<const GeometricCutUserObject *>(uo));
 }
 
-XFEMEqualValueAtInterface::~XFEMEqualValueAtInterface() {}
+XFEMDirichletBC::~XFEMDirichletBC() {}
 
 void
-XFEMEqualValueAtInterface::reinitConstraintQuadrature(const ElementPairInfo & element_pair_info)
+XFEMDirichletBC::reinitConstraintQuadrature(const ElementPairInfo & element_pair_info)
 {
   _interface_normal = element_pair_info._elem1_normal;
   ElemElemConstraint::reinitConstraintQuadrature(element_pair_info);
 }
 
 Real
-XFEMEqualValueAtInterface::computeQpResidual(Moose::DGResidualType type)
+XFEMDirichletBC::computeQpResidual(Moose::DGResidualType type)
 {
   Real area = _xfem->getCutPlaneArea(_current_elem);
   Real elem_vol = _xfem->getPhysicalVolumeFraction(_current_elem) * _current_elem->volume();
   Real neighbor_vol = _xfem->getPhysicalVolumeFraction(_neighbor_elem) * _neighbor_elem->volume();
+
+  _value = _value_neighbor = _temp_bc.sample(_constraint_q_point[_qp](1));
 
   unsigned int count_pos = 0;
   unsigned int count_neg = 0;
@@ -211,11 +219,13 @@ XFEMEqualValueAtInterface::computeQpResidual(Moose::DGResidualType type)
 }
 
 Real
-XFEMEqualValueAtInterface::computeQpJacobian(Moose::DGJacobianType type)
+XFEMDirichletBC::computeQpJacobian(Moose::DGJacobianType type)
 {
   Real area = _xfem->getCutPlaneArea(_current_elem);
   Real elem_vol = _xfem->getPhysicalVolumeFraction(_current_elem) * _current_elem->volume();
   Real neighbor_vol = _xfem->getPhysicalVolumeFraction(_neighbor_elem) * _neighbor_elem->volume();
+
+  _value = _value_neighbor = _temp_bc.sample(_constraint_q_point[_qp](1));
 
   Real r = 0;
 

@@ -47,7 +47,7 @@
     type = LevelSetOlssonBubble
     epsilon = 0.0005
     center = '0.03 0.06 0'
-    radius = 0.0016 #0.0016
+    radius = 0.008 #0.0016
   []
 []
 

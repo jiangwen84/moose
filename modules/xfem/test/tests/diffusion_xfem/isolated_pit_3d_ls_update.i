@@ -150,12 +150,12 @@
   #scheme = crank-nicolson
   petsc_options_iname = '-pc_type  -pc_factor_shift_type -pc_factor_shift_amount'
   petsc_options_value = 'lu      NONZERO               1e-10'
-  nl_rel_tol = 1e-9
-  nl_abs_tol = 1e-9
+  nl_rel_tol = 1e-8
+  nl_abs_tol = 1e-8
   nl_max_its = 15
   l_max_its = 15
   line_search = 'none'
-  dt = 1
+  dt = 0.25
   end_time = 800
   nl_forced_its = 3
 []

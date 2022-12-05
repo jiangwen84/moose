@@ -11,9 +11,9 @@
     xmax = 0.06
     ymin = 0.03
     ymax = 0.06
-    nx = 101
-    ny = 51
-    elem_type = QUAD8
+    nx = 101 #101
+    ny = 51 #51
+    elem_type = QUAD4
   []
   [add_bc]
     type = SideSetsFromBoundingBoxGenerator
@@ -57,7 +57,7 @@
     type = LevelSetOlssonBubble
     epsilon = 0.0005
     center = '0.03 0.06 0'
-    radius = 0.0016 #0.0016
+    radius = 0.008 #0.0016
   []
 []
 
@@ -82,6 +82,10 @@
     order = FIRST
     family = LAGRANGE
   []
+  # [ls_0]
+  #   order = CONSTANT
+  #   family = MONOMIAL
+  # []
 []
 
 [Constraints]
@@ -117,11 +121,19 @@
 
 [BCs]
   # Define boundary conditions
+  # [top]
+  #   type = DirichletBC
+  #   preset = false
+  #   variable = u
+  #   boundary = 10
+  #   value = 0
+  # []
+
   [top]
-    type = FunctionDirichletBC
+    type = DirichletBC
     variable = u
     boundary = 10
-    function = 0
+    value = 0
   []
 
   # [bottom]
@@ -171,6 +183,12 @@
   #   function = 0.0001
   #   variable = ls_vel
   #   execute_on = 'TIMESTEP_END'
+  # []
+  # [component]
+  #   type = VariableGradientComponent
+  #   component = x
+  #   gradient_variable = phi
+  #   variable = ls_0
   # []
 []
 

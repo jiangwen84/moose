@@ -61,11 +61,17 @@
 
 [AuxVariables]
   [phi]
+
   []
   [ls_vel]
     order = FIRST
     family = LAGRANGE
   []
+
+  # [ls_0]
+  #   order = CONSTANT
+  #   family = MONOMIAL
+  # []
 []
 
 [Constraints]
@@ -129,6 +135,7 @@
     type = TransientMultiApp
     input_files = 'isolated_pit_3d_ls_update.i'
     execute_on = 'timestep_end'
+    sub_cycling = true
   []
 []
 
@@ -137,33 +144,39 @@
     type = MultiAppNearestNodeTransfer
     source_variable = phi
     variable = phi
-    direction = from_multiapp
-    multi_app = update
+    #direction = from_multiapp
+    from_multi_app = update
     execute_on = 'timestep_end'
   []
   [to_sub]
     type = MultiAppNearestNodeTransfer
     source_variable = ls_vel
     variable = ls_vel
-    direction = to_multiapp
-    multi_app = update
+    #direction = to_multiapp
+    to_multi_app = update
     execute_on = 'timestep_end'
   []
 []
 
 [AuxKernels]
-  # [extend_vel]
-  #   type = ExtendVelocityLevelSetAux
-  #   qp_point_value_user_object = value_uo
-  #   variable = ls_vel
-  #   execute_on = 'TIMESTEP_END'
-  # []
   [extend_vel]
-    type = FunctionAux
-    function = 0.00021
+    type = ExtendVelocityLevelSetAux
+    qp_point_value_user_object = value_uo
     variable = ls_vel
     execute_on = 'TIMESTEP_END'
   []
+  # [extend_vel]
+  #   type = FunctionAux
+  #   function = 0.00031
+  #   variable = ls_vel
+  #   execute_on = 'TIMESTEP_END'
+  # []
+  # [component]
+  #   type = VariableGradientComponent
+  #   component = x
+  #   gradient_variable = phi
+  #   variable = ls_0
+  # []
 []
 
 [Postprocessors]
@@ -175,7 +188,7 @@
 
 [Executioner]
   type = Transient
-  solve_type = 'PJFNK'
+  solve_type = 'NEWTON'
   # petsc_options_iname = '-pc_type'
   # petsc_options_value = 'lu'
 
@@ -184,14 +197,16 @@
 
   line_search = 'none'
 
+  l_max_its = 10
+
   l_tol = 1e-3
   nl_max_its = 15
-  nl_rel_tol = 1e-10
-  nl_abs_tol = 1e-10
+  nl_rel_tol = 1e-7
+  nl_abs_tol = 1e-7
 
   start_time = 0.0
   dt = 1
-  end_time = 200
+  #end_time = 200
   num_steps = 100
   max_xfem_update = 1
 
@@ -203,7 +218,7 @@
   interval = 1
   execute_on = timestep_end
   exodus = true
-  file_base = isolated_pit_3d_hex
+  file_base = isolated_pit_3d_test
   [console]
     type = Console
     output_linear = true
