@@ -1166,6 +1166,18 @@ public:
   RankThreeTensorTempl<T> mixedProductJkI(const VectorValue<T> & b) const;
 
   /**
+   * @brief Return the tensor product of this second order tensor with a vector \f$ C_{ijk} = A_{ij}
+   * b_{k} \f$
+   */
+  RankThreeTensorTempl<T> mixedProductIJk(const VectorValue<T> & b) const;
+
+  /**
+   * @brief Return the tensor product of this second order tensor with a vector \f$ C_{ijk} = A_{ik}
+   * b_{j} \f$
+   */
+  RankThreeTensorTempl<T> mixedProductIkJ(const VectorValue<T> & b) const;
+
+  /**
    * @brief Return the positive projection tensor
    *
    * Consider the eigenvalue decomposition of this second order tensor \f$ A = V D V^T \f$, the part

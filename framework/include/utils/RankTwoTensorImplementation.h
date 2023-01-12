@@ -495,6 +495,34 @@ RankTwoTensorTempl<T>::mixedProductJkI(const VectorValue<T> & b) const
 }
 
 template <typename T>
+RankThreeTensorTempl<T>
+RankTwoTensorTempl<T>::mixedProductIJk(const VectorValue<T> & b) const
+{
+  RankThreeTensorTempl<T> result;
+
+  for (const auto i : make_range(N))
+    for (const auto j : make_range(N))
+      for (const auto k : make_range(N))
+        result(i, j, k) += (*this)(i, j) * b(k);
+
+  return result;
+}
+
+template <typename T>
+RankThreeTensorTempl<T>
+RankTwoTensorTempl<T>::mixedProductIkJ(const VectorValue<T> & b) const
+{
+  RankThreeTensorTempl<T> result;
+
+  for (const auto i : make_range(N))
+    for (const auto j : make_range(N))
+      for (const auto k : make_range(N))
+        result(i, j, k) += (*this)(i, k) * b(j);
+
+  return result;
+}
+
+template <typename T>
 RankTwoTensorTempl<T>
 RankTwoTensorTempl<T>::deviatoric() const
 {
