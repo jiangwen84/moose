@@ -9,43 +9,27 @@
 []
 
 [Mesh]
-  file = quarter_sym.e
+  type = GeneratedMesh
+  dim = 3
+  nx = 21
+  ny = 21
+  nz = 21
+  xmin = -1.0
+  xmax = 1.0
+  ymin = -1.0
+  ymax = 1.0
+  zmin = -1.0
+  zmax = 1.0
+  elem_type = HEX8
 []
 
 [UserObjects]
-  [circle_cut_uo]
-    type = CircleCutUserObject
-    cut_data = '-0.5 -0.5 0
-                0.0 -0.5 0
-                -0.5 0 0'
+  [level_set_cut_uo]
+    type = CrackLevelSetCutUserObject
+    level_set_phi = phi
+    level_set_psi = psi
+    heal_always = false
   []
-[]
-
-[AuxVariables]
-  [SED]
-    order = CONSTANT
-    family = MONOMIAL
-  []
-[]
-
-[DomainIntegral]
-  integrals = 'Jintegral'
-  crack_front_points = '-0.5 0.0 0.0
-                        -0.25 -0.07 0
-                        -0.15 -0.15 0
-                        -0.07 -0.25 0
-                         0 -0.5 0'
-  crack_end_direction_method = CrackDirectionVector
-  crack_direction_vector_end_1 = '0 1 0'
-  crack_direction_vector_end_2 = '1 0 0'
-  crack_direction_method = CurvedCrackFront
-  intersecting_boundary = '3 4' #It would be ideal to use this, but can't use with XFEM yet
-  radius_inner = '0.3'
-  radius_outer = '0.6'
-  poissons_ratio = 0.3
-  youngs_modulus = 207000
-  block = 1
-  incremental = true
 []
 
 [Modules/TensorMechanics/Master]
@@ -56,58 +40,69 @@
   []
 []
 
-[AuxKernels]
-  [SED]
-    type = MaterialRealAux
-    variable = SED
-    property = strain_energy_density
-    execute_on = timestep_end
-    block = 1
-  []
-[]
-
 [Functions]
   [top_trac_z]
     type = ConstantFunction
     value = 10
+  []
+  [phi_func]
+    type = ParsedFunction
+    expression = 'z-0.0'
+  []
+  [psi_func]
+    type = ParsedFunction
+    expression = 'sqrt(x*x + y*y) - 0.3-0.1*t'
+  []
+[]
+
+[AuxKernels]
+  [phi_function]
+    type = FunctionAux
+    variable = phi
+    function = phi_func
+  []
+  [psi_function]
+    type = FunctionAux
+    variable = psi
+    function = psi_func
+  []
+
+[]
+
+[AuxVariables]
+  [phi]
+    order = FIRST
+    family = LAGRANGE
+  []
+  [psi]
+    order = FIRST
+    family = LAGRANGE
   []
 []
 
 [BCs]
   [top_z]
     type = FunctionNeumannBC
-    boundary = 2
+    boundary = front
     variable = disp_z
     function = top_trac_z
   []
   [bottom_x]
     type = DirichletBC
-    boundary = 1
+    boundary = back
     variable = disp_x
     value = 0.0
   []
   [bottom_y]
     type = DirichletBC
-    boundary = 1
+    boundary = back
     variable = disp_y
     value = 0.0
   []
   [bottom_z]
     type = DirichletBC
-    boundary = 1
+    boundary = back
     variable = disp_z
-    value = 0.0
-  []
-  [sym_y]
-    type = DirichletBC
-    boundary = 3
-    variable = disp_y
-    value = 0.0
-  []
-  [sym_x]
-    type = DirichletBC
-    boundary = 4
-    variable = disp_x
     value = 0.0
   []
 []
@@ -149,7 +144,9 @@
   # time control
   start_time = 0.0
   dt = 1.0
-  end_time = 1.0
+  end_time = 4.0
+
+  max_xfem_update = 1
 []
 
 [Outputs]

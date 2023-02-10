@@ -11,9 +11,9 @@
 [Mesh]
   type = GeneratedMesh
   dim = 3
-  nx = 3
-  ny = 3
-  nz = 3
+  nx = 9
+  ny = 9
+  nz = 9
   xmin = -1.1
   xmax = 1.1
   ymin = -1.1
@@ -25,19 +25,19 @@
 []
 
 [UserObjects]
-  [./circle_cut_uo]
+  [circle_cut_uo]
     type = CircleCutUserObject
     cut_data = '0  0 0
                 0 -0.5 0
                 -0.5 0 0'
-  [../]
+  []
 []
 
 [AuxVariables]
-  [./SED]
-   order = CONSTANT
+  [SED]
+    order = CONSTANT
     family = MONOMIAL
-  [../]
+  []
 []
 
 [DomainIntegral]
@@ -55,67 +55,66 @@
 []
 
 [Modules/TensorMechanics/Master]
-  [./all]
+  [all]
     strain = FINITE
     add_variables = true
     generate_output = 'stress_xx stress_yy stress_zz vonmises_stress'
-  [../]
+  []
 []
 
 [AuxKernels]
-  [./SED]
+  [SED]
     type = MaterialRealAux
     variable = SED
     property = strain_energy_density
     execute_on = timestep_end
     block = 0
-  [../]
+  []
 []
 
 [Functions]
-  [./top_trac_z]
+  [top_trac_z]
     type = ConstantFunction
     value = 10
-  [../]
+  []
 []
 
-
 [BCs]
-  [./top_z]
+  [top_z]
     type = FunctionNeumannBC
     boundary = front
     variable = disp_z
     function = top_trac_z
-  [../]
-  [./bottom_x]
+  []
+  [bottom_x]
     type = DirichletBC
     boundary = back
     variable = disp_x
     value = 0.0
-  [../]
-  [./bottom_y]
+  []
+  [bottom_y]
     type = DirichletBC
     boundary = back
     variable = disp_y
     value = 0.0
-  [../]
-  [./bottom_z]
+  []
+  [bottom_z]
     type = DirichletBC
     boundary = back
     variable = disp_z
     value = 0.0
-  [../]
+  []
 []
 
 [Materials]
-  [./elasticity_tensor]
+  [elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 207000
     poissons_ratio = 0.3
-  [../]
-  [./stress]
+  []
+  [stress]
     type = ComputeFiniteStrainElasticStress
-  [../]
+  []
 []
 
 [Executioner]
@@ -127,21 +126,21 @@
 
   line_search = 'none'
 
-  [./Predictor]
+  [Predictor]
     type = SimplePredictor
     scale = 1.0
-  [../]
+  []
 
-# controls for linear iterations
+  # controls for linear iterations
   l_max_its = 100
   l_tol = 1e-2
 
-# controls for nonlinear iterations
+  # controls for nonlinear iterations
   nl_max_its = 15
   nl_rel_tol = 1e-10
   nl_abs_tol = 1e-10
 
-# time control
+  # time control
   start_time = 0.0
   dt = 1.0
   end_time = 1.0
@@ -150,8 +149,8 @@
 [Outputs]
   execute_on = timestep_end
   exodus = true
-  [./console]
+  [console]
     type = Console
     output_linear = true
-  [../]
+  []
 []

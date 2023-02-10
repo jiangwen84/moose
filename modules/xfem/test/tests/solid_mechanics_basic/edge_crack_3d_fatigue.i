@@ -25,7 +25,7 @@
 []
 
 [UserObjects]
-  [./cut_mesh]
+  [cut_mesh]
     type = CrackMeshCut3DUserObject
     mesh_file = mesh_edge_crack.xda
     growth_dir_method = 'function'
@@ -37,12 +37,13 @@
     function_z = growth_func_z
     function_v = growth_func_v
     crack_front_nodes = '7 6 5 4'
-  [../]
+  []
 []
 
 [Functions]
-  [./growth_func_x]
+  [growth_func_x]
     type = ParsedFunction
+<<<<<<< Updated upstream
     expression = 1
   [../]
   [./growth_func_y]
@@ -59,15 +60,33 @@
     symbol_values = 'fatigue'
     expression = dN
   [../]
+=======
+    value = 1
+  []
+  [growth_func_y]
+    type = ParsedFunction
+    value = 0
+  []
+  [growth_func_z]
+    type = ParsedFunction
+    value = 0
+  []
+  [growth_func_v]
+    type = ParsedFunction
+    vars = 'dN'
+    vals = 'fatigue'
+    value = dN
+  []
+>>>>>>> Stashed changes
 []
 
 [Postprocessors]
-  [./fatigue]
+  [fatigue]
     type = ParisLaw
     max_growth_size = 0.1
     paris_law_c = 1e-13
     paris_law_m = 2.5
-  [../]
+  []
 []
 
 [DomainIntegral]
@@ -85,59 +104,58 @@
 []
 
 [Modules/TensorMechanics/Master]
-  [./all]
+  [all]
     strain = FINITE
     add_variables = true
     generate_output = 'stress_xx stress_yy stress_zz vonmises_stress'
-  [../]
+  []
 []
 
 [Functions]
-  [./top_trac_y]
+  [top_trac_y]
     type = ConstantFunction
     value = 10
-  [../]
+  []
 []
 
-
 [BCs]
-  [./top_y]
+  [top_y]
     type = FunctionNeumannBC
     boundary = top
     variable = disp_y
     function = top_trac_y
-  [../]
-  [./bottom_x]
+  []
+  [bottom_x]
     type = DirichletBC
     boundary = bottom
     variable = disp_x
     value = 0.0
-  [../]
-  [./bottom_y]
+  []
+  [bottom_y]
     type = DirichletBC
     boundary = bottom
     variable = disp_y
     value = 0.0
-  [../]
-  [./bottom_z]
+  []
+  [bottom_z]
     type = DirichletBC
     boundary = bottom
     variable = disp_z
     value = 0.0
-  [../]
+  []
 []
 
 [Materials]
-  [./elasticity_tensor]
+  [elasticity_tensor]
     type = ComputeIsotropicElasticityTensor
     youngs_modulus = 207000
     poissons_ratio = 0.3
     block = 0
-  [../]
-  [./stress]
+  []
+  [stress]
     type = ComputeFiniteStrainElasticStress
     block = 0
-  [../]
+  []
 []
 
 [Executioner]
@@ -149,21 +167,21 @@
 
   line_search = 'none'
 
-  [./Predictor]
+  [Predictor]
     type = SimplePredictor
     scale = 1.0
-  [../]
+  []
 
-# controls for linear iterations
+  # controls for linear iterations
   l_max_its = 100
   l_tol = 1e-2
 
-# controls for nonlinear iterations
+  # controls for nonlinear iterations
   nl_max_its = 15
   nl_rel_tol = 1e-12
   nl_abs_tol = 1e-10
 
-# time control
+  # time control
   start_time = 0.0
   dt = 1.0
   end_time = 4.0
@@ -174,8 +192,8 @@
   file_base = edge_crack_3d_fatigue_out
   execute_on = 'timestep_end'
   exodus = true
-  [./console]
+  [console]
     type = Console
     output_linear = true
-  [../]
+  []
 []
