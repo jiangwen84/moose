@@ -11,14 +11,14 @@
 
 registerMooseObject("MooseApp", AlphaThicknessZr);
 
-defineLegacyParams(AlphaThicknessZr);
-
 InputParameters
 AlphaThicknessZr::validParams()
 {
   InputParameters params = GeneralPostprocessor::validParams();
-  params.addParam<PostprocessorName>("oxide_alpha_pos", "The name of the postprocessor giving the oxide/alpha interface position");
-  params.addParam<PostprocessorName>("alpha_beta_pos", "The name of the postprocessor giving the alpha/beta interface position");
+  params.addParam<PostprocessorName>(
+      "oxide_alpha_pos", "The name of the postprocessor giving the oxide/alpha interface position");
+  params.addParam<PostprocessorName>(
+      "alpha_beta_pos", "The name of the postprocessor giving the alpha/beta interface position");
   return params;
 }
 
@@ -38,11 +38,11 @@ AlphaThicknessZr::initialize()
 void
 AlphaThicknessZr::execute()
 {
- _d_alpha = _x_ox_a - _x_a_b; //Alpha layer thickness [um]
+  _d_alpha = _x_ox_a - _x_a_b; // Alpha layer thickness [um]
 }
 
 Real
 AlphaThicknessZr::getValue()
 {
-    return _d_alpha;
+  return _d_alpha;
 }

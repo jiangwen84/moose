@@ -11,20 +11,17 @@
 
 registerMooseObject("MooseApp", OxideThicknessZr);
 
-defineLegacyParams(OxideThicknessZr);
-
 InputParameters
 OxideThicknessZr::validParams()
 {
   InputParameters params = GeneralPostprocessor::validParams();
-  params.addParam<PostprocessorName>("oxide_alpha_pos", "The name of the postprocessor giving the oxide/alpha interface position");
+  params.addParam<PostprocessorName>(
+      "oxide_alpha_pos", "The name of the postprocessor giving the oxide/alpha interface position");
   return params;
 }
 
 OxideThicknessZr::OxideThicknessZr(const InputParameters & parameters)
-  : GeneralPostprocessor(parameters),
-    _delta(0),
-    _x_ox_a(getPostprocessorValue("oxide_alpha_pos"))
+  : GeneralPostprocessor(parameters), _delta(0), _x_ox_a(getPostprocessorValue("oxide_alpha_pos"))
 {
 }
 
@@ -36,12 +33,12 @@ OxideThicknessZr::initialize()
 void
 OxideThicknessZr::execute()
 {
-  const Real PBR(1.55); //Zr Pilling-Bedworth ratio
- _delta = (600 - _x_ox_a) * PBR;  //Oxide thickness [um]
+  const Real PBR(1.55);           // Zr Pilling-Bedworth ratio
+  _delta = (600 - _x_ox_a) * PBR; // Oxide thickness [um]
 }
 
 Real
 OxideThicknessZr::getValue()
 {
-    return _delta;
+  return _delta;
 }

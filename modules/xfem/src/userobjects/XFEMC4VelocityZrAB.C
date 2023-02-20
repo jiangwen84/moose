@@ -12,11 +12,10 @@
 
 registerMooseObject("XFEMApp", XFEMC4VelocityZrAB);
 
-template <>
 InputParameters
-validParams<XFEMC4VelocityZrAB>()
+XFEMC4VelocityZrAB::validParams()
 {
-  InputParameters params = validParams<XFEMMovingInterfaceVelocityBase>();
+  InputParameters params = XFEMMovingInterfaceVelocityBase::validParams();
   params.addParam<Real>("temperature", 1473.15, "Temperature of the cladding (K)");
   params.addClassDescription("Calculate the alpha phase/beta phase interface velocity for the 2 "
                              "interfaces C4 model for Zircaloy-4 corrosion.");
@@ -52,7 +51,7 @@ XFEMC4VelocityZrAB::computeMovingInterfaceVelocity(unsigned int point_id) const
   const Real c_o_a_b = x_o_a_b / (1 - x_o_a_b);
   const Real c_o_b_a = x_o_b_a / (1 - x_o_b_a);
 
-// Diffusivities here are in um^2/s
+  // Diffusivities here are in um^2/s
 
   // Diffusion coefficients
   Real diffusivity_alpha = 10.3;
@@ -90,7 +89,7 @@ XFEMC4VelocityZrAB::computeMovingInterfaceVelocity(unsigned int point_id) const
   }
   else
   {
-    diffusivity_alpha = 11.64* exp(-54881/ 1.987 / _temperature) * 1e8;
+    diffusivity_alpha = 11.64 * exp(-54881 / 1.987 / _temperature) * 1e8;
   }
 
   Real diffusivity_beta = 280.8594;
@@ -129,7 +128,7 @@ XFEMC4VelocityZrAB::computeMovingInterfaceVelocity(unsigned int point_id) const
   }
   else
   {
-    diffusivity_beta = 0.274*exp(-34308/ 1.987 / _temperature) * 1e8;
+    diffusivity_beta = 0.274 * exp(-34308 / 1.987 / _temperature) * 1e8;
   }
 
   const Real J_b_to_a = -diffusivity_alpha * grad_positive(0);

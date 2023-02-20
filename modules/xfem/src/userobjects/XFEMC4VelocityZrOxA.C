@@ -12,11 +12,10 @@
 
 registerMooseObject("XFEMApp", XFEMC4VelocityZrOxA);
 
-template <>
 InputParameters
-validParams<XFEMC4VelocityZrOxA>()
+XFEMC4VelocityZrOxA::validParams()
 {
-  InputParameters params = validParams<XFEMMovingInterfaceVelocityBase>();
+  InputParameters params = XFEMMovingInterfaceVelocityBase::validParams();
   params.addParam<Real>("temperature", 1473.15, "Temperature of the cladding (K)");
   params.addClassDescription("Calculate the metal/oxide interface velocity for the 1 interface C4 "
                              "model for Zircaloy-4 corrosion.");
@@ -124,7 +123,7 @@ XFEMC4VelocityZrOxA::computeMovingInterfaceVelocity(unsigned int point_id) const
   }
   else
   {
-    diffusivity_alpha = 11.64* exp(-54881/ 1.987 / _temperature) * 1e8;
+    diffusivity_alpha = 11.64 * exp(-54881 / 1.987 / _temperature) * 1e8;
   }
 
   // Mobilities

@@ -19,8 +19,7 @@ public:
   XFEMPhaseTransitionMovingInterfaceVelocity(const InputParameters & parameters);
   virtual ~XFEMPhaseTransitionMovingInterfaceVelocity() {}
 
-  virtual Real computeMovingInterfaceVelocity(dof_id_type point_id,
-                                              RealVectorValue normal) const override;
+  virtual Real computeMovingInterfaceVelocity(unsigned int point_id) const override;
 
 protected:
   /// Diffusivity in the positive level set region

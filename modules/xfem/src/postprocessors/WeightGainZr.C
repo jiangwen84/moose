@@ -11,14 +11,13 @@
 
 registerMooseObject("MooseApp", WeightGainZr);
 
-defineLegacyParams(WeightGainZr);
-
 InputParameters
 WeightGainZr::validParams()
 {
   InputParameters params = GeneralPostprocessor::validParams();
-  params.addParam<Real>("temperature",1473.15,"Temperature of the cladding (K)");
-  params.addParam<PostprocessorName>("flux_integral", "The name of the vacancy flux inegral postprocessor");
+  params.addParam<Real>("temperature", 1473.15, "Temperature of the cladding (K)");
+  params.addParam<PostprocessorName>("flux_integral",
+                                     "The name of the vacancy flux inegral postprocessor");
   return params;
 }
 
@@ -38,7 +37,7 @@ WeightGainZr::initialize()
 void
 WeightGainZr::execute()
 {
-  const Real Mo = 15.99;    // Molar mass of oxygen
+  const Real Mo = 15.99; // Molar mass of oxygen
   const Real Na(6.022e23);
 
   //"Initial" weight gain is temperature dependent
@@ -71,11 +70,11 @@ WeightGainZr::execute()
   {
     wg0 = 6.0413e-3 * exp(4.1196e-3 * _temperature);
   }
- _wg = wg0 + 0.1 * Mo / Na * _flux_integral;  ///Weight gain in mg/cm²
+  _wg = wg0 + 0.1 * Mo / Na * _flux_integral; ///Weight gain in mg/cm²
 }
 
 Real
 WeightGainZr::getValue()
 {
-    return _wg;
+  return _wg;
 }

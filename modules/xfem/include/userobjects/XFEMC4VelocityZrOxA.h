@@ -12,7 +12,6 @@
 
 #include "XFEMMovingInterfaceVelocityBase.h"
 
-
 /**
  *
  * Computes the velocity of the oxide/alpha interface.
@@ -26,31 +25,26 @@
 
 class XFEMC4VelocityZrOxA;
 
-template <>
-InputParameters validParams<XFEMC4VelocityZrOxA>();
-
 class XFEMC4VelocityZrOxA : public XFEMMovingInterfaceVelocityBase
 {
 public:
+  static InputParameters validParams();
+
   XFEMC4VelocityZrOxA(const InputParameters & parameters);
   virtual ~XFEMC4VelocityZrOxA() {}
 
   virtual Real computeMovingInterfaceVelocity(unsigned int point_id) const override;
 
-  Real getVacancyFlux() const
-  {
-    return _J_v;
-  };
+  Real getVacancyFlux() const { return _J_v; };
 
-//  Real getOxideVelocity() const
-//  {
-//    return _ox_vel;
-//  };
+  //  Real getOxideVelocity() const
+  //  {
+  //    return _ox_vel;
+  //  };
 
 protected:
-
   /// Diffusivity of oxygen in the Zr alpha phase
-  //Real _diffusivity_alpha;
+  // Real _diffusivity_alpha;
 
   // Temperature [K]
   Real _temperature;
@@ -59,7 +53,7 @@ protected:
   mutable Real _J_v;
 
   // Oxide/alpha interface velocity [/m²/s]
-  //mutable Real _ox_vel;
+  // mutable Real _ox_vel;
 };
 
 #endif // XFEMC4VELOCITYZROXA_H

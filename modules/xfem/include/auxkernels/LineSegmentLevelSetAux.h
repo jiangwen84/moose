@@ -12,20 +12,21 @@
 #include "AuxKernel.h"
 
 // Forward Declarations
-class InterfaceMeshCut3DUserObject;
+class LineSegmentCutSetUserObject;
 
 /**
  * Calculate level set values for an interface that is defined by a set of line segments
  */
-class MeshCutLevelSetAux : public AuxKernel
+class LineSegmentLevelSetAux : public AuxKernel
 {
 public:
   static InputParameters validParams();
 
-  MeshCutLevelSetAux(const InputParameters & parameters);
+  LineSegmentLevelSetAux(const InputParameters & parameters);
 
 protected:
   virtual Real computeValue() override;
+  virtual void compute() override;
 
   /**
    * calculate the signed distance value for a given point.
@@ -34,18 +35,9 @@ protected:
    */
   Real calculateSignedDistance(Point p);
 
-  Real pointSegmentDistance(const Point & x0, const Point & x1, const Point & x2, Point & xp);
-  Real pointTriangleDistance(const Point & x0,
-                             const Point & x1,
-                             const Point & x2,
-                             const Point & x3,
-                             Point & xp,
-                             unsigned int & location_index);
-  /// Pointer to the InterfaceMeshCut3DUserObject object
-  const InterfaceMeshCut3DUserObject * _mesh_cut_uo;
+  /// Pointer to the LineSegmentCutSetUserObject object
+  const LineSegmentCutSetUserObject * _linesegment_uo;
 
-  /// The structural mesh
-  MooseMesh & _mesh;
-
-  const std::map<unsigned int, std::array<Point, 7>> * _pseudo_normal;
+  /// Store the cut locations
+  std::vector<Real> _cut_data;
 };

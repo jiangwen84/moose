@@ -23,15 +23,12 @@
  * the atomic concentration of Zr in the metal.
  */
 
-
 class XFEMC4VelocityZrAB;
-
-template <>
-InputParameters validParams<XFEMC4VelocityZrAB>();
 
 class XFEMC4VelocityZrAB : public XFEMMovingInterfaceVelocityBase
 {
 public:
+  static InputParameters validParams();
   XFEMC4VelocityZrAB(const InputParameters & parameters);
   virtual ~XFEMC4VelocityZrAB() {}
 
@@ -39,10 +36,10 @@ public:
 
 protected:
   /// Diffusivity of oxygen in the Zr alpha phase
-  //Real _diffusivity_alpha;
+  // Real _diffusivity_alpha;
 
   /// Diffusivity of oxygen in the Zr beta phase
-  //Real _diffusivity_beta;
+  // Real _diffusivity_beta;
 
   /// Temperature [K]
   Real _temperature;

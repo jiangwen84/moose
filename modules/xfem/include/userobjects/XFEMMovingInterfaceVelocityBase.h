@@ -10,7 +10,7 @@
 #pragma once
 
 #include "DiscreteElementUserObject.h"
-#include "NodeValueAtXFEMInterface.h"
+#include "PointValueAtXFEMInterface.h"
 
 class XFEMMovingInterfaceVelocityBase : public DiscreteElementUserObject
 {
@@ -23,20 +23,18 @@ public:
   virtual void initialize() override;
 
   /**
-   * Compute the interface velocity for a node
-   * @param node_id  node ID
-   * @param normal  normal direction at this node
+   * Compute the interface velocity for a point
+   * @param point_id  Point ID
    * @return Real     Interface velocity
    */
-  virtual Real computeMovingInterfaceVelocity(dof_id_type node_id,
-                                              RealVectorValue normal) const = 0;
+  virtual Real computeMovingInterfaceVelocity(unsigned int point_id) const = 0;
 
   /**
-   * Compute total number of nodes that are used to define an interface
+   * Compute total number of points that are used to define an interface
    */
-  unsigned int numberNodes() const { return _value_at_interface_uo->numberNodes(); }
+  unsigned int numberPoints() const { return _value_at_interface_uo->numberPoints(); }
 
 protected:
-  /// Pointer to NodeValueAtXFEMInterface object
-  const NodeValueAtXFEMInterface * _value_at_interface_uo;
+  /// Pointer to PointValueAtXFEMInterface object
+  const PointValueAtXFEMInterface * _value_at_interface_uo;
 };

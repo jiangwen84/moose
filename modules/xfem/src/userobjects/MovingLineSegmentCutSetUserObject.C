@@ -79,8 +79,8 @@ MovingLineSegmentCutSetUserObject::execute()
           _interface_velocity->computeMovingInterfaceVelocity((i - 1)) * _dt;
       cut_data_copy[(i - 1) * line_cut_data_len + 2] +=
           _interface_velocity->computeMovingInterfaceVelocity(i) * _dt;
-      //std::cout << "velocity = " << _interface_velocity->computeMovingInterfaceVelocity((i - 1))
-      //          << std::endl;
+      // std::cout << "velocity = " << _interface_velocity->computeMovingInterfaceVelocity((i - 1))
+      //           << std::endl;
     }
     // std::cout << "Number of points : " << _interface_velocity->numberPoints() << std::endl;
     // velocity_C4->computeVacancyFlux(_interface_velocity->numberPoints()-1);
@@ -118,8 +118,8 @@ MovingLineSegmentCutSetUserObject::finalize()
   GeometricCutUserObject::finalize();
 }
 
-Real
-MovingLineSegmentCutSetUserObject::cutFraction(unsigned int /*cut_num*/, Real /*time*/) const
+CutSubdomainID
+MovingLineSegmentCutSetUserObject::getCutSubdomainID(const Node * node) const
 {
-  return 1;
+  return 0;
 }

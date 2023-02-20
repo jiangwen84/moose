@@ -13,18 +13,20 @@
 #include "ElementPairLocator.h"
 #include "MooseVariableFE.h"
 
+#include "libmesh/vector_value.h"
+
+// Forward Declarations
 class XFEM;
 class LineSegmentCutSetUserObject;
-class InterfaceMeshCut3DUserObject;
 
-class NodeValueAtXFEMInterface : public GeneralUserObject
+class PointValueAtXFEMInterface : public GeneralUserObject
 {
 public:
   static InputParameters validParams();
 
-  NodeValueAtXFEMInterface(const InputParameters & parameters);
+  PointValueAtXFEMInterface(const InputParameters & parameters);
 
-  virtual ~NodeValueAtXFEMInterface() {}
+  virtual ~PointValueAtXFEMInterface() {}
 
   virtual void initialize() override;
   virtual void execute() override;
@@ -86,13 +88,13 @@ protected:
    * @return The Elem containing the point or NULL if this processor doesn't contain an element that
    * contains this point.
    */
-  const Elem * getElemContainingPoint(const Node & p, bool positive_level_set);
+  const Elem * getElemContainingPoint(const Point & p, bool positive_level_set);
 
-  /// The computation mesh
+  /// The Mesh we're using
   MooseMesh & _mesh;
 
-  /// The nodes to evaluate at
-  std::vector<Point> _nodes;
+  /// The points to evaluate at
+  std::vector<Point> _points;
 
   /// Pointer to PointLocatorBase object
   std::unique_ptr<PointLocatorBase> _pl;
@@ -104,10 +106,7 @@ protected:
   const ElementPairLocator::ElementPairList * _elem_pairs;
 
   /// Pointer to LineSegmentCutSetUserObject object
-  const InterfaceMeshCutUserObjectBase * _mesh_cut;
-
-  /// Pointer to LineSegmentCutSetUserObject object
-  const InterfaceMeshCut3DUserObject * _geo_cut_3d;
+  const LineSegmentCutSetUserObject * _geo_cut;
 
   /// Pointer to MooseVariableFEBase object
   MooseVariableFEBase * _var;

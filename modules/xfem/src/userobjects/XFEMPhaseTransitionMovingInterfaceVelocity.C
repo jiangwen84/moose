@@ -37,7 +37,7 @@ XFEMPhaseTransitionMovingInterfaceVelocity::XFEMPhaseTransitionMovingInterfaceVe
 
 Real
 XFEMPhaseTransitionMovingInterfaceVelocity::computeMovingInterfaceVelocity(
-    dof_id_type point_id, RealVectorValue normal) const
+    unsigned int point_id) const
 {
   Real value_positive = _value_at_interface_uo->getValueAtPositiveLevelSet()[point_id];
   Real value_negative = _value_at_interface_uo->getValueAtNegativeLevelSet()[point_id];

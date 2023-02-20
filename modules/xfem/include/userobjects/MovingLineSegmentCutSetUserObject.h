@@ -32,9 +32,8 @@ public:
   virtual const std::vector<Point>
   getCrackFrontPoints(unsigned int num_crack_front_points) const override;
 
-  virtual Real cutFraction(unsigned int cut_num, Real time) const override;
-
   /// Pointer to XFEMMovingInterfaceVelocityBase object
   const XFEMMovingInterfaceVelocityBase * _interface_velocity;
 
+  virtual CutSubdomainID getCutSubdomainID(const Node * node) const override;
 };

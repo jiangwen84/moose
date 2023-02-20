@@ -40,8 +40,8 @@ XFEMC4VelocityOld::XFEMC4VelocityOld(const InputParameters & parameters)
 Real
 XFEMC4VelocityOld::computeMovingInterfaceVelocity(unsigned int point_id) const
 {
-//  Real value_positive = _value_at_interface_uo->getValueAtPositiveLevelSet()[point_id];
-//  Real value_negative = _value_at_interface_uo->getValueAtNegativeLevelSet()[point_id];
+  //  Real value_positive = _value_at_interface_uo->getValueAtPositiveLevelSet()[point_id];
+  //  Real value_negative = _value_at_interface_uo->getValueAtNegativeLevelSet()[point_id];
   RealVectorValue grad_positive = _value_at_interface_uo->getGradientAtPositiveLevelSet()[point_id];
   RealVectorValue grad_negative = _value_at_interface_uo->getGradientAtNegativeLevelSet()[point_id];
 
@@ -49,7 +49,7 @@ XFEMC4VelocityOld::computeMovingInterfaceVelocity(unsigned int point_id) const
   const Real zirconium_PBR(1.55);
   Real delta = zirconium_PBR * std::abs(xt - 600);
 
-//  std::cout << "delta: " << delta << std::endl;
+  //  std::cout << "delta: " << delta << std::endl;
 
   // Current implementation only supports the case that the interface is moving horizontally
   //  return std::abs((_diffusivity_at_positive_level_set * grad_positive(0) -
@@ -72,7 +72,7 @@ XFEMC4VelocityOld::computeMovingInterfaceVelocity(unsigned int point_id) const
   const Real con_o_ox_m(5.24e28);
   const Real con_o_m_ox(1.7078e28);
 
-// use fixed temperature at 1200C until we add a temperature diffusion kernel
+  // use fixed temperature at 1200C until we add a temperature diffusion kernel
   const Real temperature(1473);
 
   const Real mobil_v = 4 * pow(migr_jp_l, 2) * migr_jp_f * 2 / (Kb * temperature) *
@@ -86,12 +86,12 @@ XFEMC4VelocityOld::computeMovingInterfaceVelocity(unsigned int point_id) const
   const Real eta = (-B - sqrt(pow(B, 2) - 4 * A * C)) / (2 * A);
   const Real potential = Kb * temperature * log(eta);
 
-  const Real J_v = mobil_v * potential * (con_v_ox_w - con_v_ox_m * pow(eta, 2)) /
-                   (1 - pow(eta, 2)) / delta;
+  const Real J_v =
+      mobil_v * potential * (con_v_ox_w - con_v_ox_m * pow(eta, 2)) / (1 - pow(eta, 2)) / delta;
   const Real J_o = _diffusivity_at_positive_level_set * con_zr * grad_positive(0) / 3 * 1e-6;
 
   if (delta == 0)
     return sqrt(0.01126 * exp(-35890 / (1.987 * temperature)) / (2 * _t)) * (-1e-2);
   else
-    return - (J_v - J_o) / (zirconium_PBR * con_o_ox_m - con_o_m_ox);
+    return -(J_v - J_o) / (zirconium_PBR * con_o_ox_m - con_o_m_ox);
 }

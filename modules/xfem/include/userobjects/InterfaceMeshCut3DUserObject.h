@@ -9,17 +9,6 @@
 
 #pragma once
 
-<<<<<<< HEAD
-#include "InterfaceMeshCutUserObjectBase.h"
-
-/**
- * Mesh cutter for 3D material interface problems.
- */
-
-class XFEMMovingInterfaceVelocityBase;
-
-class InterfaceMeshCut3DUserObject : public InterfaceMeshCutUserObjectBase
-=======
 #include "GeometricCutUserObject.h"
 #include "XFEMMovingInterfaceVelocityBase.h"
 #include "libmesh/exodusII_io.h"
@@ -38,14 +27,18 @@ class PointValueAtXFEMInterface;
  */
 
 class InterfaceMeshCut3DUserObject : public GeometricCutUserObject
->>>>>>> aecf9dea54 (preliminary development of moving interface capability using XFEM)
 {
 public:
   static InputParameters validParams();
 
   InterfaceMeshCut3DUserObject(const InputParameters & parameters);
 
-<<<<<<< HEAD
+  virtual void initialSetup() override;
+  virtual void initialize() override;
+
+  std::shared_ptr<MeshBase> getCutMesh() const { return _cut_mesh; };
+  const auto * getPseudoNormal() const { return &_pseudo_normal; };
+
   virtual bool cutElementByGeometry(const Elem * elem,
                                     std::vector<Xfem::CutEdge> & cut_edges,
                                     std::vector<Xfem::CutNode> & cut_nodes) const override;
@@ -56,38 +49,13 @@ public:
   virtual bool cutFragmentByGeometry(std::vector<std::vector<Point>> & frag_faces,
                                      std::vector<Xfem::CutFace> & cut_faces) const override;
 
-  virtual Real calculateSignedDistance(Point p) const override;
+  virtual CutSubdomainID getCutSubdomainID(const Node * /*node*/) const override { return 0; }
 
-  virtual Point nodeNormal(const unsigned int & node_id) override;
-
-  virtual void calculateNormals() override;
-
-protected:
-  /// Map of information defining cutting elements, stored in this order for each element:
-  /// pseudo normal, three nodes, and three sides
-  std::unordered_map<unsigned int, std::array<Point, 7>> _pseudo_normal;
-=======
-  virtual void initialSetup() override;
-  virtual void initialize() override;
   virtual const std::vector<Point>
   getCrackFrontPoints(unsigned int num_crack_front_points) const override;
 
-  std::shared_ptr<MeshBase> getCutMesh() const { return _cut_mesh; };
-  const auto * getPseudoNormal() const { return &_pseudo_normal; };
-
-  virtual bool cutElementByGeometry(const Elem * elem,
-                                    std::vector<Xfem::CutEdge> & cut_edges,
-                                    std::vector<Xfem::CutNode> & cut_nodes,
-                                    Real time) const override;
-  virtual bool cutElementByGeometry(const Elem * elem,
-                                    std::vector<Xfem::CutFace> & cut_faces,
-                                    Real time) const override;
-  virtual bool cutFragmentByGeometry(std::vector<std::vector<Point>> & frag_edges,
-                                     std::vector<Xfem::CutEdge> & cut_edges,
-                                     Real time) const override;
-  virtual bool cutFragmentByGeometry(std::vector<std::vector<Point>> & frag_faces,
-                                     std::vector<Xfem::CutFace> & cut_faces,
-                                     Real time) const override;
+  virtual const std::vector<RealVectorValue>
+  getCrackPlaneNormals(unsigned int num_crack_front_points) const override;
 
 protected:
   /// The cutter mesh
@@ -134,5 +102,4 @@ protected:
 
   /// Pointer to XFEMMovingInterfaceVelocityBase object
   const XFEMMovingInterfaceVelocityBase * _interface_velocity;
->>>>>>> aecf9dea54 (preliminary development of moving interface capability using XFEM)
 };

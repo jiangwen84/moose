@@ -7,27 +7,27 @@
 //* Licensed under LGPL 2.1, please see LICENSE for details
 //* https://www.gnu.org/licenses/lgpl-2.1.html
 
-#include "NodeValueAtXFEMInterface.h"
+#include "PointValueAtXFEMInterface.h"
+#include "MooseMesh.h"
 #include "MooseVariableFE.h"
 #include "XFEM.h"
 #include "LineSegmentCutSetUserObject.h"
-#include "InterfaceMeshCut3DUserObject.h"
 
 #include "libmesh/mesh_tools.h"
 #include "libmesh/parallel_algebra.h"
 #include "libmesh/parallel.h"
 
-registerMooseObject("XFEMApp", NodeValueAtXFEMInterface);
+registerMooseObject("XFEMApp", PointValueAtXFEMInterface);
 
 InputParameters
-NodeValueAtXFEMInterface::validParams()
+PointValueAtXFEMInterface::validParams()
 {
   InputParameters params = GeneralUserObject::validParams();
   params.addRequiredParam<VariableName>(
       "variable", "The name of the variable that this UserObject operates on");
   params.addParam<UserObjectName>(
-      "interface_mesh_cut_userobject",
-      "Name of InterfaceMeshCutUserObject that provides cut locations to this UserObject.");
+      "geometric_cut_userobject",
+      "Name of GeometricCutUserObject that provides the points to this UserObject.");
   params.addRequiredParam<VariableName>(
       "level_set_var", "The name of level set variable used to represent the interface");
   params.addParam<bool>("is_3d", false, "3D case");
@@ -35,7 +35,7 @@ NodeValueAtXFEMInterface::validParams()
   return params;
 }
 
-NodeValueAtXFEMInterface::NodeValueAtXFEMInterface(const InputParameters & parameters)
+PointValueAtXFEMInterface::PointValueAtXFEMInterface(const InputParameters & parameters)
   : GeneralUserObject(parameters),
     _mesh(_subproblem.mesh()),
     _var(&_subproblem.getVariable(_tid, parameters.get<VariableName>("variable"))),
@@ -48,12 +48,12 @@ NodeValueAtXFEMInterface::NodeValueAtXFEMInterface(const InputParameters & param
 }
 
 void
-NodeValueAtXFEMInterface::initialize()
+PointValueAtXFEMInterface::initialize()
 {
   _pl = _mesh.getPointLocator();
   _xfem = MooseSharedNamespace::dynamic_pointer_cast<XFEM>(_fe_problem.getXFEM());
   if (_xfem == nullptr)
-    mooseError("Problem casting to XFEM in NodeValueAtXFEMInterface");
+    mooseError("Problem casting to XFEM in PointValueAtXFEMInterface");
 
   if (!_is_3d)
   {
@@ -68,14 +68,6 @@ NodeValueAtXFEMInterface::initialize()
   }
   else
   {
-    const UserObject * uo =
-        &(_fe_problem.getUserObjectBase(getParam<UserObjectName>("geometric_cut_userobject")));
-
-    if (dynamic_cast<const InterfaceMeshCut3DUserObject *>(uo) == nullptr)
-      mooseError("UserObject casting to GeometricCutUserObject in XFEMSingleVariableConstraint");
-
-    _geo_cut_3d = dynamic_cast<const InterfaceMeshCut3DUserObject *>(uo);
-    _elem_pairs = _xfem->getXFEMCutElemPairs(_xfem->getGeometricCutID(_geo_cut_3d));
   }
 
   _xfem = MooseSharedNamespace::dynamic_pointer_cast<XFEM>(_fe_problem.getXFEM());
@@ -90,13 +82,13 @@ PointValueAtXFEMInterface::getPointCurrentLocation(unsigned int i) const
 };
 
 void
-NodeValueAtXFEMInterface::execute()
+PointValueAtXFEMInterface::execute()
 {
   _values_positive_level_set_side.clear();
   _values_negative_level_set_side.clear();
   _grad_values_positive_level_set_side.clear();
   _grad_values_negative_level_set_side.clear();
-  _nodes.clear();
+  _points.clear();
 
   if (!_is_3d)
   {
@@ -114,13 +106,6 @@ NodeValueAtXFEMInterface::execute()
   }
   else
   {
-    std::shared_ptr<MeshBase> cut_mesh = _geo_cut_3d->getCutMesh();
-
-    for (const auto & node : cut_mesh->node_ptr_range())
-    {
-      Point p = *node;
-      _points.push_back(p);
-    }
   }
 
   BoundingBox bbox = _mesh.getInflatedProcessorBoundingBox(0.);
@@ -133,37 +118,34 @@ NodeValueAtXFEMInterface::execute()
 
     if (bbox.contains_point(p))
     {
-      const Elem * elem = getElemContainingPoint(*node, /*positive_level_set = */ true);
+      const Elem * elem = getElemContainingPoint(p, true);
 
       std::cout << "i = " << i << ", p = " << p << std::endl;
 
       if (elem != nullptr)
       {
-        _subproblem.setCurrentSubdomainID(elem, /*_tid */ 0);
-        _subproblem.reinitElemPhys(elem, {*node}, 0);
+        point_vec[0] = p;
+
+        _subproblem.setCurrentSubdomainID(elem, 0);
+        _subproblem.reinitElemPhys(elem, point_vec, 0);
 
         _values_positive_level_set_side[i] = (dynamic_cast<MooseVariable *>(_var))->sln()[0];
         _grad_values_positive_level_set_side[i] =
             ((dynamic_cast<MooseVariable *>(_var))->gradSln())[0];
       }
 
-      const Elem * elem2 = getElemContainingPoint(*node, false);
+      const Elem * elem2 = getElemContainingPoint(p, false);
       if (elem2 != nullptr)
       {
-        _subproblem.setCurrentSubdomainID(elem2, /*_tid */ 0);
-        _subproblem.reinitElemPhys(elem2, {*node}, 0);
+        point_vec[0] = p;
+
+        _subproblem.setCurrentSubdomainID(elem2, 0);
+        _subproblem.reinitElemPhys(elem2, point_vec, 0);
 
         _values_negative_level_set_side[i] = (dynamic_cast<MooseVariable *>(_var))->sln()[0];
         _grad_values_negative_level_set_side[i] =
             ((dynamic_cast<MooseVariable *>(_var))->gradSln())[0];
       }
-    }
-    else // When node is outside of computation domain
-    {
-      _values_positive_level_set_side[i] = 0;
-      _values_negative_level_set_side[i] = 0;
-      _grad_values_positive_level_set_side[i] = RealVectorValue(0);
-      _grad_values_negative_level_set_side[i] = RealVectorValue(0);
     }
   }
   // Take the value of the x component at only one point
@@ -174,7 +156,7 @@ NodeValueAtXFEMInterface::execute()
 }
 
 void
-NodeValueAtXFEMInterface::finalize()
+PointValueAtXFEMInterface::finalize()
 {
   _communicator.set_union(_values_positive_level_set_side);
   _communicator.set_union(_grad_values_positive_level_set_side);
@@ -185,7 +167,7 @@ NodeValueAtXFEMInterface::finalize()
 }
 
 const Elem *
-NodeValueAtXFEMInterface::getElemContainingPoint(const Node & p, bool positive_level_set)
+PointValueAtXFEMInterface::getElemContainingPoint(const Point & p, bool positive_level_set)
 {
   std::cout << "p = " << p << std::endl;
   const Elem * elem1 = (*_pl)(p);
@@ -209,7 +191,7 @@ NodeValueAtXFEMInterface::getElemContainingPoint(const Node & p, bool positive_l
   else
   {
     if (ls_node_value < 0.0)
-      positive = false;
+      positive = true;
   }
 
   const Elem * elem2 = nullptr;
@@ -229,9 +211,8 @@ NodeValueAtXFEMInterface::getElemContainingPoint(const Node & p, bool positive_l
   }
 
   if (!found)
-    mooseError("NodeValueAtXFEMInterface: The interface node ",
-               p,
-               " are not found by element pair locator.");
+    mooseError(
+        "PointValueAtXFEMInterface: The interface points are not found by element pair locator.");
 
   if ((positive && positive_level_set) || (!positive && !positive_level_set))
     return elem1;
