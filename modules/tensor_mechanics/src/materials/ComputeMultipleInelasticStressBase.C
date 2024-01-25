@@ -13,6 +13,7 @@
 #include "MooseException.h"
 #include "DamageBase.h"
 #include "libmesh/int_range.h"
+#include "RadialReturnStressUpdate.h"
 
 InputParameters
 ComputeMultipleInelasticStressBase::validParams()
@@ -80,6 +81,9 @@ ComputeMultipleInelasticStressBase::ComputeMultipleInelasticStressBase(
     _inelastic_strain(declareProperty<RankTwoTensor>(_base_name + "combined_inelastic_strain")),
     _inelastic_strain_old(
         getMaterialPropertyOld<RankTwoTensor>(_base_name + "combined_inelastic_strain")),
+    _effective_inelastic_strain(declareProperty<Real>(_base_name + "effective_inelastic_strain")),
+    _effective_inelastic_strain_old(
+        getMaterialPropertyOld<Real>(_base_name + "effective_inelastic_strain")),
     _tangent_operator_type(getParam<MooseEnum>("tangent_operator").getEnum<TangentOperatorEnum>()),
     _tangent_calculation_method(TangentCalculationMethod::ELASTIC),
     _cycle_models(getParam<bool>("cycle_models")),
@@ -94,6 +98,7 @@ ComputeMultipleInelasticStressBase::initQpStatefulProperties()
 {
   ComputeStressBase::initQpStatefulProperties();
   _inelastic_strain[_qp].zero();
+  _effective_inelastic_strain[_qp] = 0.0;
 }
 
 void
@@ -308,7 +313,21 @@ ComputeMultipleInelasticStressBase::updateQpStateSingleModel(
     RankTwoTensor & combined_inelastic_strain_increment)
 {
   for (auto model : _models)
+  {
     model->setQp(_qp);
+    model->setQp(_qp);
+    if (dynamic_cast<RadialReturnStressUpdate *>(model) != nullptr)
+    {
+      dynamic_cast<RadialReturnStressUpdate *>(model)->setInitialGuess(
+          _effective_inelastic_strain_old[_qp]);
+      std::cout << " set initial guess at _qp = " << _qp
+                << ", old effective inelastic strain = " << _effective_inelastic_strain_old[_qp]
+                << std::endl;
+    }
+    else
+      std::cout << " dynamic_cast<RadialReturnStressUpdate *>(_models[i_rmm]) is not working "
+                << std::endl;
+  }
 
   elastic_strain_increment = _strain_increment[_qp];
 
@@ -394,6 +413,16 @@ ComputeMultipleInelasticStressBase::computeAdmissibleState(
                                        _elastic_strain_old[_qp],
                                        (jac && _tangent_computation_flag[model_number]),
                                        consistent_tangent_operator);
+
+  if (dynamic_cast<RadialReturnStressUpdate *>(_models[model_number]) != nullptr)
+  {
+    _effective_inelastic_strain[_qp] =
+        dynamic_cast<RadialReturnStressUpdate *>(_models[model_number])
+            ->getEffectiveInelasticStrain();
+    // std::cout << "dynamic_cast is  working" << std::endl;
+  }
+  else
+    std::cout << "dynamic_cast is not working" << std::endl;
 
   if (jac && !_tangent_computation_flag[model_number])
   {

@@ -113,6 +113,10 @@ public:
   /// Sets the value of the global variable _qp for inheriting classes
   void setQp(unsigned int qp);
 
+  // virtual const GenericReal<is_ad> getEffectiveInelasticStrain();
+
+  // virtual void setInitialGuess(const Real & initial_guess);
+
   /**
    * If updateState is not called during a timestep, this will be.  This method allows derived
    * classes to set internal parameters from their Old values, for instance

@@ -28,6 +28,8 @@ public:
   static InputParameters validParams();
 
   SingleVariableReturnMappingSolutionTempl(const InputParameters & parameters);
+  virtual void setInitialGuess(const Real & initial_guess) { _initial_guess = initial_guess; }
+
   virtual ~SingleVariableReturnMappingSolutionTempl() {}
 
 protected:
@@ -66,7 +68,7 @@ protected:
    */
   virtual GenericReal<is_ad> initialGuess(const GenericReal<is_ad> & /*effective_trial_stress*/)
   {
-    return 0.0;
+    return _initial_guess;
   }
 
   /**
@@ -218,6 +220,8 @@ private:
   GenericReal<is_ad> _initial_residual;
   GenericReal<is_ad> _residual;
   ///@}
+
+  GenericReal<is_ad> _initial_guess;
 
   /// Derivative of the residual
   GenericReal<is_ad> _derivative;

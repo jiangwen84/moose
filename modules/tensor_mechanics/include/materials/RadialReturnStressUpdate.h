@@ -163,6 +163,12 @@ public:
     _effective_inelastic_strain[_qp] = _effective_inelastic_strain_old[_qp] + increment;
   }
 
+  const GenericReal<is_ad> getEffectiveInelasticStrain()
+  {
+    // return _effective_inelastic_strain[_qp];
+    return _effective_inelastic_strain_increment;
+  }
+
   /**
    * Calculate the tangent_operator.
    */

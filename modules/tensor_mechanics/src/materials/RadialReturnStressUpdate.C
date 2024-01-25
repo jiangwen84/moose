@@ -265,6 +265,9 @@ RadialReturnStressUpdateTempl<is_ad>::updateState(
 
   // Use Newton iteration to determine the scalar effective inelastic strain increment
   _effective_inelastic_strain_increment = 0.0;
+
+  std::cout << "effective_trial_stress = " << effective_trial_stress << std::endl;
+
   if (!MooseUtils::absoluteFuzzyEqual(effective_trial_stress, 0.0))
   {
     this->returnMappingSolve(

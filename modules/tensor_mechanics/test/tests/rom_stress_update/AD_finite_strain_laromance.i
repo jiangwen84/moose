@@ -11,8 +11,8 @@
   dim = 2
   xmin = 1
   xmax = 2
-  nx = 50
-  ny = 50
+  nx = 1
+  ny = 1
 []
 
 [Modules/TensorMechanics/Master]
@@ -27,7 +27,7 @@
 
 [AuxVariables]
   [temp]
-    initial_condition = 1000.0
+    initial_condition = 800.0
   []
 []
 
@@ -35,7 +35,8 @@
   [cooling]
     type = FunctionAux
     variable = temp
-    function = '1000-10*t*x'
+    # function = '800-10*t*x'
+    function = 800
   []
 []
 
@@ -52,13 +53,19 @@
     boundary = left
     value = 0.0
   []
+  [top]
+    type = ADFunctionDirichletBC
+    variable = disp_z
+    boundary = top
+    function = 1.5e-4
+  []
 []
 
 [Materials]
   [eigenstrain]
     type = ADComputeThermalExpansionEigenstrain
     eigenstrain_name = 'thermal'
-    stress_free_temperature = 1000
+    stress_free_temperature = 800
     thermal_expansion_coeff = 1e-6 #1e-4
     temperature = temp
   []
@@ -77,6 +84,8 @@
     initial_cell_dislocation_density = 6.0e12
     initial_wall_dislocation_density = 4.4e11
     outputs = all
+    # internal_solve_full_iteration_history = true
+    # internal_solve_output_on = always
   []
 []
 
@@ -98,7 +107,11 @@
   petsc_options_value = 'lu'
 
   line_search = 'none'
-  end_time = 10
+  #end_time = 100
+  num_steps = 100
+
+  nl_abs_tol = 1e-12
+
   dt = 1
 
   automatic_scaling = true
@@ -109,4 +122,5 @@
   # print_nonlinear_converged_reason = false
   # print_linear_residuals = false
   perf_graph = true
+  exodus = true
 []

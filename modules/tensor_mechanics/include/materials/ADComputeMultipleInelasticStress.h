@@ -115,6 +115,12 @@ protected:
   /// old value of inelastic strain
   const MaterialProperty<RankTwoTensor> & _inelastic_strain_old;
 
+  /// The effective inelastic strain
+  ADMaterialProperty<Real> & _effective_inelastic_strain;
+
+  /// old effective inelastic strain
+  const MaterialProperty<Real> & _effective_inelastic_strain_old;
+
   /// number of plastic models
   const unsigned _num_models;
 

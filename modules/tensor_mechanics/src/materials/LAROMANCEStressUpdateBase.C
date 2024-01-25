@@ -796,6 +796,11 @@ LAROMANCEStressUpdateBaseTempl<is_ad>::computeResidual(
   }
   _input_values[_stress_input_index] = trial_stress_mpa;
 
+  std::cout << "effective_trial_stress = " << effective_trial_stress * _stress_ucf
+            << ", three_shear_modulus = " << this->_three_shear_modulus << std::endl;
+  std::cout << "scalar = " << MetaPhysicL::raw_value(scalar)
+            << ", trial_stress_mpa  = " << MetaPhysicL::raw_value(trial_stress_mpa) << std::endl;
+
   // Update weights for each partition with new stress
   for (unsigned int p = 0; p < _num_partitions; ++p)
     _weights[p] = _non_stress_weights[p];

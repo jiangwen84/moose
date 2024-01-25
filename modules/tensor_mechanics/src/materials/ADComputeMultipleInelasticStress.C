@@ -9,6 +9,7 @@
 
 #include "ADComputeMultipleInelasticStress.h"
 #include "MooseException.h"
+#include "RadialReturnStressUpdate.h"
 
 registerMooseObject("TensorMechanicsApp", ADComputeMultipleInelasticStress);
 
@@ -73,6 +74,9 @@ ADComputeMultipleInelasticStress::ADComputeMultipleInelasticStress(
     _inelastic_strain(declareADProperty<RankTwoTensor>(_base_name + "combined_inelastic_strain")),
     _inelastic_strain_old(
         getMaterialPropertyOld<RankTwoTensor>(_base_name + "combined_inelastic_strain")),
+    _effective_inelastic_strain(declareADProperty<Real>(_base_name + "effective_inelastic_strain")),
+    _effective_inelastic_strain_old(
+        getMaterialPropertyOld<Real>(_base_name + "effective_inelastic_strain")),
     _num_models(getParam<std::vector<MaterialName>>("inelastic_models").size()),
     _inelastic_weights(isParamValid("combined_inelastic_strain_weights")
                            ? getParam<std::vector<Real>>("combined_inelastic_strain_weights")
@@ -94,6 +98,7 @@ ADComputeMultipleInelasticStress::initQpStatefulProperties()
 {
   ADComputeFiniteStrainElasticStress::initQpStatefulProperties();
   _inelastic_strain[_qp].zero();
+  _effective_inelastic_strain[_qp] = 0.0;
 }
 
 void
@@ -193,9 +198,11 @@ ADComputeMultipleInelasticStress::computeQpStressIntermediateConfiguration()
   else
   {
     if (_num_models == 1 || _cycle_models)
+    {
       updateQpStateSingleModel((_t_step - 1) % _num_models,
                                elastic_strain_increment,
                                combined_inelastic_strain_increment);
+    }
     else
       updateQpState(elastic_strain_increment, combined_inelastic_strain_increment);
 
@@ -219,6 +226,8 @@ ADComputeMultipleInelasticStress::updateQpState(
     ADRankTwoTensor & elastic_strain_increment,
     ADRankTwoTensor & combined_inelastic_strain_increment)
 {
+  std::cout << "updateQpState is called " << std::endl;
+
   if (_internal_solve_full_iteration_history == true)
   {
     _console << std::endl
@@ -242,6 +251,17 @@ ADComputeMultipleInelasticStress::updateQpState(
     for (unsigned i_rmm = 0; i_rmm < _num_models; ++i_rmm)
     {
       _models[i_rmm]->setQp(_qp);
+
+      if (dynamic_cast<ADRadialReturnStressUpdate *>(_models[i_rmm]) != nullptr)
+      {
+        dynamic_cast<ADRadialReturnStressUpdate *>(_models[i_rmm])
+            ->setInitialGuess(_effective_inelastic_strain_old[_qp]);
+        // std::cout << "22 dynamic_cast<RadialReturnStressUpdate *>(_models[i_rmm]) is working "
+        //           << std::endl;
+      }
+      else
+        std::cout << " dynamic_cast<RadialReturnStressUpdate *>(_models[i_rmm]) is not working "
+                  << std::endl;
 
       // initially assume the strain is completely elastic
       elastic_strain_increment = _strain_increment[_qp];
@@ -348,7 +368,20 @@ ADComputeMultipleInelasticStress::updateQpStateSingleModel(
     ADRankTwoTensor & combined_inelastic_strain_increment)
 {
   for (auto model : _models)
+  {
     model->setQp(_qp);
+    if (dynamic_cast<ADRadialReturnStressUpdate *>(model) != nullptr)
+    {
+      dynamic_cast<ADRadialReturnStressUpdate *>(model)->setInitialGuess(
+          _effective_inelastic_strain_old[_qp]);
+      std::cout << " set initial guess at _qp = " << _qp
+                << ", old effective inelastic strain = " << _effective_inelastic_strain_old[_qp]
+                << std::endl;
+    }
+    else
+      std::cout << " dynamic_cast<RadialReturnStressUpdate *>(_models[i_rmm]) is not working "
+                << std::endl;
+  }
 
   elastic_strain_increment = _strain_increment[_qp];
 
@@ -421,4 +454,14 @@ ADComputeMultipleInelasticStress::computeAdmissibleState(
                                        _stress_old[_qp],
                                        _elasticity_tensor[_qp],
                                        _elastic_strain_old[_qp]);
+
+  if (dynamic_cast<ADRadialReturnStressUpdate *>(_models[model_number]) != nullptr)
+  {
+    _effective_inelastic_strain[_qp] =
+        dynamic_cast<ADRadialReturnStressUpdate *>(_models[model_number])
+            ->getEffectiveInelasticStrain();
+    // std::cout << "dynamic_cast is  working" << std::endl;
+  }
+  else
+    std::cout << "dynamic_cast is not working" << std::endl;
 }

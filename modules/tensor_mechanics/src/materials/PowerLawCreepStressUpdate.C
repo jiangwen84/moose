@@ -76,6 +76,8 @@ PowerLawCreepStressUpdateTempl<is_ad>::computeResidualInternal(
     const GenericReal<is_ad> & effective_trial_stress, const ScalarType & scalar)
 {
   const ScalarType stress_delta = effective_trial_stress - _three_shear_modulus * scalar;
+  std::cout << "scalar = " << MetaPhysicL::raw_value(scalar)
+            << ", stress_delta  = " << MetaPhysicL::raw_value(stress_delta) << std::endl;
   const ScalarType creep_rate =
       _coefficient * std::pow(stress_delta, _n_exponent) * _exponential * _exp_time;
   return creep_rate * _dt - scalar;

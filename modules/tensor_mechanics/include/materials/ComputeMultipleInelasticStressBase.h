@@ -135,6 +135,12 @@ protected:
   /// old value of inelastic strain
   const MaterialProperty<RankTwoTensor> & _inelastic_strain_old;
 
+  /// The effective inelastic strain
+  MaterialProperty<Real> & _effective_inelastic_strain;
+
+  /// old effective inelastic strain
+  const MaterialProperty<Real> & _effective_inelastic_strain_old;
+
   /// what sort of Tangent operator to calculate
   const enum class TangentOperatorEnum { elastic, nonlinear } _tangent_operator_type;
 

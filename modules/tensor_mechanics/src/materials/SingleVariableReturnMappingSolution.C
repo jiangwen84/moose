@@ -168,6 +168,9 @@ SingleVariableReturnMappingSolutionTempl<is_ad>::internalSolve(
     std::stringstream * iter_output)
 {
   scalar = initialGuess(effective_trial_stress);
+  // scalar = 0.0;
+  // std::cout << "scalar = " << scalar << std::endl;
+  // std::cout << "effective_trial_stress = " << effective_trial_stress << std::endl;
   GenericReal<is_ad> scalar_old = scalar;
   GenericReal<is_ad> scalar_increment = 0.0;
   const GenericReal<is_ad> min_permissible_scalar = minimumPermissibleValue(effective_trial_stress);
