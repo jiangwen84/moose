@@ -7844,10 +7844,12 @@ FEProblemBase::initialAdaptMesh()
     for (unsigned int i = 0; i < n; i++)
     {
       computeIndicators();
+
       computeMarkers();
 
       if (_adaptivity.initialAdaptMesh())
       {
+        std::cout << "n = " << i << ", adapt mesh" << std::endl;
         meshChanged();
 
         // reproject the initial condition
@@ -7884,9 +7886,13 @@ FEProblemBase::adaptMesh()
     if (!_mesh.interiorLowerDBlocks().empty() || !_mesh.boundaryLowerDBlocks().empty())
       mooseError("HFEM does not support mesh adaptivity currently.");
 
+    std::cout << "_adaptivity.getRecomputeMarkersFlag()  = "
+              << _adaptivity.getRecomputeMarkersFlag() << ", i = " << i << std::endl;
     // Markers were already computed once by Executioner
     if (_adaptivity.getRecomputeMarkersFlag() && i > 0)
       computeMarkers();
+
+    std::cout << "i = " << i << ", adapt mesh" << std::endl;
 
     bool mesh_changed_this_step;
     mesh_changed_this_step = _adaptivity.adaptMesh();

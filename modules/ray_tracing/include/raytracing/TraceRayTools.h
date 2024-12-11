@@ -45,9 +45,9 @@ extern const std::set<int> TRACEABLE_ELEMTYPES;
 extern const std::set<int> ADAPTIVITY_TRACEABLE_ELEMTYPES;
 
 /// The standard tolerance to use in tracing
-const Real TRACE_TOLERANCE = 1e-8;
+const Real TRACE_TOLERANCE = 1e-13;
 /// Looser tolerance for use in error checking in difficult situations
-const Real LOOSE_TRACE_TOLERANCE = 1e-5;
+const Real LOOSE_TRACE_TOLERANCE = 1e-10;
 
 /// Value for an invalid integer
 const int INVALID_INT = std::numeric_limits<int>::max();

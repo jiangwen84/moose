@@ -28,8 +28,10 @@ LevelSetMeshRefinementTransfer::validParams()
   params.suppressParameter<MultiMooseEnum>("direction");
 
   ExecFlagEnum & exec = params.set<ExecFlagEnum>("execute_on");
-  exec.addAvailableFlags(LevelSet::EXEC_ADAPT_MESH, LevelSet::EXEC_COMPUTE_MARKERS);
-  exec = {LevelSet::EXEC_COMPUTE_MARKERS, LevelSet::EXEC_ADAPT_MESH};
+  exec.addAvailableFlags(
+      LevelSet::EXEC_ADAPT_MESH, LevelSet::EXEC_COMPUTE_MARKERS, LevelSet::EXEC_INITIAL_ADAPT_MESH);
+  exec = {
+      LevelSet::EXEC_COMPUTE_MARKERS, LevelSet::EXEC_ADAPT_MESH, LevelSet::EXEC_INITIAL_ADAPT_MESH};
   params.set<bool>("check_multiapp_execute_on") = false;
   params.suppressParameter<ExecFlagEnum>("execute_on");
 
@@ -54,6 +56,9 @@ LevelSetMeshRefinementTransfer::initialSetup()
       MooseVariable & to_var = to_problem.getStandardVariable(0, _to_var_name);
       Adaptivity & adapt = to_problem.adaptivity();
       adapt.setMarkerVariableName(to_var.name());
+
+      adapt.setInitialMarkerVariableName(to_var.name());
+
       adapt.setCyclesPerStep(from_problem.adaptivity().getCyclesPerStep());
       adapt.init(1, 0, false);
       adapt.setUseNewSystem();
@@ -65,14 +70,19 @@ LevelSetMeshRefinementTransfer::initialSetup()
 void
 LevelSetMeshRefinementTransfer::execute()
 {
+  std::cout << "EXECUTE ..." << std::endl;
   if (_current_execute_flag == LevelSet::EXEC_COMPUTE_MARKERS)
+  {
+    std::cout << "TRANSFER ...." << std::endl;
     MultiAppCopyTransfer::execute();
+  }
 
   else if (_current_execute_flag == LevelSet::EXEC_ADAPT_MESH)
   {
     for (unsigned int i = 0; i < getToMultiApp()->numGlobalApps(); i++)
       if (getToMultiApp()->hasLocalApp(i))
       {
+        std::cout << "ADPATING MESH ...." << std::endl;
         FEProblemBase & to_problem = getToMultiApp()->appProblemBase(i);
         Adaptivity & adapt = to_problem.adaptivity();
         adapt.setAdaptivityOn(true);
@@ -80,4 +90,18 @@ LevelSetMeshRefinementTransfer::execute()
         adapt.setAdaptivityOn(false);
       }
   }
+
+  // else if (_current_execute_flag == LevelSet::EXEC_INITIAL_ADAPT_MESH)
+  // {
+  //   for (unsigned int i = 0; i < getToMultiApp()->numGlobalApps(); i++)
+  //     if (getToMultiApp()->hasLocalApp(i))
+  //     {
+  //       std::cout << "ADPATING INITIAL MESH ...." << std::endl;
+  //       FEProblemBase & to_problem = getToMultiApp()->appProblemBase(i);
+  //       Adaptivity & adapt = to_problem.adaptivity();
+  //       adapt.setAdaptivityOn(true);
+  //       to_problem.adaptMesh();
+  //       adapt.setAdaptivityOn(false);
+  //     }
+  // }
 }

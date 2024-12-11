@@ -19,6 +19,12 @@ LevelSetOlssonReinitialization::validParams()
   params.addClassDescription("The re-initialization equation defined by Olsson et. al. (2007).");
   params.addRequiredCoupledVar(
       "phi_0", "The level set variable to be reinitialized as signed distance function.");
+  params.addCoupledVar("grad_levelset_x",
+                       "The level set variable to be reinitialized as signed distance function.");
+  params.addCoupledVar("grad_levelset_y",
+                       "The level set variable to be reinitialized as signed distance function.");
+  params.addCoupledVar("grad_levelset_z",
+                       "The level set variable to be reinitialized as signed distance function.");
   params.addParam<bool>(
       "use_modified_reinitilization_formulation",
       false,
@@ -31,6 +37,9 @@ LevelSetOlssonReinitialization::validParams()
 LevelSetOlssonReinitialization::LevelSetOlssonReinitialization(const InputParameters & parameters)
   : ADKernelGrad(parameters),
     _grad_levelset_0(adCoupledGradient("phi_0")),
+    _grad_levelset_x(coupledValue("grad_levelset_x")),
+    _grad_levelset_y(coupledValue("grad_levelset_y")),
+    _grad_levelset_z(coupledValue("grad_levelset_z")),
     _epsilon(getPostprocessorValue("epsilon")),
     _use_modified_reinitilization_formulation(
         getParam<bool>("use_modified_reinitilization_formulation"))
@@ -40,9 +49,15 @@ LevelSetOlssonReinitialization::LevelSetOlssonReinitialization(const InputParame
 ADRealVectorValue
 LevelSetOlssonReinitialization::precomputeQpResidual()
 {
-  ADReal s = _grad_levelset_0[_qp].norm() + std::numeric_limits<ADReal>::epsilon();
-  ADRealVectorValue n_hat = _grad_levelset_0[_qp] / s;
+  // ADReal s = _grad_levelset_0[_qp].norm() + std::numeric_limits<ADReal>::epsilon();
+  // ADRealVectorValue n_hat = _grad_levelset_0[_qp] / s;
+  // ADRealVectorValue f = _u[_qp] * (1 - _u[_qp]) * n_hat;
+
+  RealVectorValue grad_phi(_grad_levelset_x[_qp], _grad_levelset_y[_qp], _grad_levelset_z[_qp]);
+  Real s = grad_phi.norm() + std::numeric_limits<Real>::epsilon();
+  RealVectorValue n_hat = grad_phi / s;
   ADRealVectorValue f = _u[_qp] * (1 - _u[_qp]) * n_hat;
+
   if (_use_modified_reinitilization_formulation)
     return (-f + _epsilon * (_grad_u[_qp] * n_hat) * n_hat);
   else

@@ -22,5 +22,6 @@ public:
 
   LevelSetProblem(const InputParameters & parameters);
   virtual bool adaptMesh() override;
+  virtual void initialAdaptMesh() override;
   virtual void computeMarkers() override;
 };

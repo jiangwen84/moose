@@ -91,6 +91,10 @@ RepeatableRayStudyBase::generateRays()
     claimRaysInternal();
   }
 
+  // defineRaysInternal();
+
+  // claimRaysInternal();
+
   // Reserve ahead of time how many Rays we are adding to the buffer
   reserveRayBuffer(_local_rays.size());
 

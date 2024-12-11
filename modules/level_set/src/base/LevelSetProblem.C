@@ -29,6 +29,7 @@ LevelSetProblem::LevelSetProblem(const InputParameters & parameters) : FEProblem
 void
 LevelSetProblem::computeMarkers()
 {
+  std::cout << "LevelSetProblem::computeMarkers() " << std::endl;
   FEProblem::computeMarkers();
   setCurrentExecuteOnFlag(LevelSet::EXEC_COMPUTE_MARKERS);
   execMultiAppTransfers(LevelSet::EXEC_COMPUTE_MARKERS, MultiAppTransfer::TO_MULTIAPP);
@@ -43,4 +44,14 @@ LevelSetProblem::adaptMesh()
   execMultiAppTransfers(LevelSet::EXEC_ADAPT_MESH, MultiAppTransfer::TO_MULTIAPP);
   setCurrentExecuteOnFlag(EXEC_NONE);
   return adapt;
+}
+
+void
+LevelSetProblem::initialAdaptMesh()
+{
+  std::cout << "LevelSetProblem::initialAdaptMesh() " << std::endl;
+  FEProblem::initialAdaptMesh();
+  setCurrentExecuteOnFlag(LevelSet::EXEC_INITIAL_ADAPT_MESH);
+  execMultiAppTransfers(LevelSet::EXEC_INITIAL_ADAPT_MESH, MultiAppTransfer::TO_MULTIAPP);
+  setCurrentExecuteOnFlag(EXEC_NONE);
 }

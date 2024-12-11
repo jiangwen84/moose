@@ -15,3 +15,4 @@
 
 const ExecFlagType LevelSet::EXEC_ADAPT_MESH = registerExecFlag("ADAPT_MESH");
 const ExecFlagType LevelSet::EXEC_COMPUTE_MARKERS = registerExecFlag("COMPUTE_MARKERS");
+const ExecFlagType LevelSet::EXEC_INITIAL_ADAPT_MESH = registerExecFlag("EXEC_INITIAL_ADAPT_MESH");

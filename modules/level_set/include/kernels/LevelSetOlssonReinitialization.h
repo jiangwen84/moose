@@ -28,6 +28,12 @@ protected:
   /// Gradient of the level set variable at time, \tau = 0.
   const ADVariableGradient & _grad_levelset_0;
 
+  const VariableValue & _grad_levelset_x;
+
+  const VariableValue & _grad_levelset_y;
+
+  const VariableValue & _grad_levelset_z;
+
   /// Interface thickness
   const PostprocessorValue & _epsilon;
 
