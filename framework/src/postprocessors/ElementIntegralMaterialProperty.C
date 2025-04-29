@@ -36,6 +36,8 @@ template <bool is_ad>
 Real
 ElementIntegralMaterialPropertyTempl<is_ad>::computeQpIntegral()
 {
+  std::cout << _current_elem->get_info() << std::endl;
+  std::cout << "value = qp " << _qp << "..." << MetaPhysicL::raw_value(_scalar[_qp]) << std::endl;
   return MetaPhysicL::raw_value(_scalar[_qp]);
 }
 
